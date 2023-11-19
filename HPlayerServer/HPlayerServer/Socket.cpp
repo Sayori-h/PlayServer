@@ -132,7 +132,7 @@ int CLocalSocket::Send(const Buffer& buffer)
 		if (len == 0) {
 			return -2;//连接被关闭
 		}
-		if (len < 0)return -3;//写操作失败
+		if (len < 0)return -3; //写操作失败
 		index += len;
 	}
 	return 0;
