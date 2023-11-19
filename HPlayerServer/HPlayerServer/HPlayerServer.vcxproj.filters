@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="header">
+      <UniqueIdentifier>{ab113470-693e-452b-bb9a-8cb7fa934192}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{52812ae3-f008-40d4-9493-e51cab0b2de0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="CEpoll.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Socket.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Function.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Process.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="CEpoll.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Socket.h">
+      <Filter>header</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
