@@ -18,6 +18,12 @@
     <ClCompile Include="Socket.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -30,6 +36,12 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="Socket.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>

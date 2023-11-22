@@ -76,14 +76,18 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="CEpoll.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Socket.cpp" />
+    <ClCompile Include="Thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CEpoll.h" />
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Socket.h" />
+    <ClInclude Include="Thread.h" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

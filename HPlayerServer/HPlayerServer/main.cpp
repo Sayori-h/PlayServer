@@ -1,18 +1,7 @@
-﻿#define DEBUG
-#define BUF_SIZE 1024
-#include <cstdio>
-#include <cerrno>
+﻿#include <cerrno>
 #include "Function.h"
 #include "Process.h"
-
-#ifdef DEBUG
-FILE* pFile = fopen("./BugInfo.txt", "w+");
-char szBufInfo[BUF_SIZE];
-#endif // DEBUG
-
-
-
-
+#include "Debug.h"
 
 int CreateLogServer(CProcess* proc) {
 #ifdef DEBUG
