@@ -111,7 +111,7 @@ void CThread::EnterThread()
 	if (m_function != nullptr) {
 		int ret = (*m_function)();
 		if (ret != 0) {
-#ifdef DEBUG
+#ifdef _DEBUG
 			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
 			fflush(pFile);

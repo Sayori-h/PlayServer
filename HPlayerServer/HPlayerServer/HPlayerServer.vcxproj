@@ -77,6 +77,7 @@
   <ItemGroup>
     <ClCompile Include="CEpoll.cpp" />
     <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Socket.cpp" />
     <ClCompile Include="Thread.cpp" />
@@ -85,11 +86,16 @@
     <ClInclude Include="CEpoll.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="Thread.h" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

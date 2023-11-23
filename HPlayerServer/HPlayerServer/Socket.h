@@ -12,6 +12,8 @@ class Buffer :public std::string
 public:
 	Buffer() :std::string() {}
 	Buffer(size_t size) :std::string() { resize(size); }
+	Buffer(const std::string& str) :std::string(str){}
+	Buffer(const char* str) :std::string(str){}
 	operator char* () { return (char*)c_str(); }
 	operator char* () const { return (char*)c_str(); }
 	//operator const char* () const{ return c_str(); }
@@ -69,6 +71,8 @@ public:
 	virtual int Recv(Buffer& buffer) = 0;
 	//关闭连接
 	virtual void Close();
+	virtual operator int() { return m_socket; }
+	virtual operator int()const { return m_socket; }
 protected:
 	//套接字描述符，默认是-1
 	int m_socket;

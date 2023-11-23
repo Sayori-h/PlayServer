@@ -24,6 +24,9 @@
     <ClCompile Include="Debug.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -42,6 +45,9 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="Debug.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
