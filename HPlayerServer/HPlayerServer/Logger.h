@@ -1,26 +1,25 @@
-#pragma once
+Ôªø#pragma once
 #include "Thread.h"
 #include "CEpoll.h"
 #include "Socket.h"
-#include "Debug.h"
 #include <sys/timeb.h>
 #include <stdarg.h>
 #include <sstream>
 #include <sys/stat.h>
 
-enum LogLevel {
-	LOG_INFO,
-	LOG_DEBUG,
-	LOG_WARNING,
-	LOG_ERROR,
-	LOG_FATAL
+enum LogType {
+	INFO,
+	DEBUG,
+	WARNING,
+	ERROR,
+	FATAL
 };
 
 class LogInfo
 {
 public:
 	LogInfo(const char* file, int line, const char* func, pid_t pid,
-		pthread_t tid,int logType,const char*format,...);
+		pthread_t tid, int logType,const char*format,...);
 	LogInfo(const char* file, int line, const char* func, pid_t pid,
 		pthread_t tid, int logType);
 	LogInfo(const char* file, int line, const char* func, pid_t pid,
@@ -31,12 +30,32 @@ public:
 	LogInfo& operator<<(const T& data) {
 		std::stringstream stream;
 		stream << data;
-		m_buf += stream.str();
+#ifdef DEBUG
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // Ê∏ÖÈõ∂ÁºìÂÜ≤Âå∫
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):[%s] stringstream=[%s]\n",
+				__FILE__, __LINE__, __FUNCTION__, stream.str().c_str());
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
+#endif
+		m_buf += stream.str().c_str();
+#ifdef DEBUG
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // Ê∏ÖÈõ∂ÁºìÂÜ≤Âå∫
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):[%s] m_buf=[%s]\n",
+				__FILE__, __LINE__, __FUNCTION__, (char*)m_buf);
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
+#endif
 		return *this;
 	}
 private:
 	Buffer m_buf;
-	//ƒ¨»œ «false ¡˜ Ω»’÷æ£¨‘ÚŒ™true
+	//ÈªòËÆ§ÊòØfalse ÊµÅÂºèÊó•ÂøóÔºåÂàô‰∏∫true
 	bool m_bIsStreamLog;
 };
 
@@ -50,12 +69,12 @@ public:
 	CLoggerServer& operator=(const CLoggerServer&) = delete;
 
 	int Start();
-	int ThreadFunc();
 	int Close();
-	//∏¯∆‰À˚∑«»’÷æΩ¯≥Ã∫Õœﬂ≥Ã”√µƒ
+	//ÁªôÂÖ∂‰ªñÈùûÊó•ÂøóËøõÁ®ãÂíåÁ∫øÁ®ãÁî®ÁöÑ
 	static void Trace(const LogInfo& info);
 	static Buffer GetTimeStr();
 private:
+	int ThreadFunc();
 	void WriteLog(const Buffer& data);
 private:
 	CThread m_thread;
@@ -66,35 +85,35 @@ private:
 };
 
 #ifndef TRACE
-#define TRACE_INFO(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,\
-__FUNCTION__,getpid(),pthread_self(),LOG_INFO,__VA_ARGS__))
-#define TRACE_DEBUG(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,\
-__FUNCTION__,getpid(),pthread_self(),LOG_DEBUG,__VA_ARGS__))
-#define TRACE_WARNING(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,\
-__FUNCTION__,getpid(),pthread_self(),LOG_WARNING,__VA_ARGS__))
-#define TRACE_ERROR(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,\
-__FUNCTION__,getpid(),pthread_self(),LOG_ERROR,__VA_ARGS__))
-#define TRACE_FATAL(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,\
-__FUNCTION__,getpid(),pthread_self(),LOG_FATAL,__VA_ARGS__))
+#define TRACE_INFO(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,\
+getpid(),pthread_self(),INFO,__VA_ARGS__))
+#define TRACE_DEBUG(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,\
+getpid(),pthread_self(),DEBUG,__VA_ARGS__))
+#define TRACE_WARNING(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,\
+getpid(),pthread_self(),WARNING,__VA_ARGS__))
+#define TRACE_ERROR(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,\
+getpid(),pthread_self(),ERROR,__VA_ARGS__))
+#define TRACE_FATAL(...) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,\
+getpid(),pthread_self(),FATAL,__VA_ARGS__))
 
-//LOG_INFO<<"hello"<<"how are you";÷ª”–¡˜ Ω»’÷æ «◊‘º∫÷˜∂Ø∑¢µƒ
-#define LOG_INFO LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),LOG_INFO)
-#define LOG_DEBUG LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),LOG_DEBUG)
-#define LOG_WARNING LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),LOG_WARNING)
-#define LOG_ERROR LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),LOG_ERROR)
-#define LOG_FATAL LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),LOG_FATAL)
+//LOG_INFO<<"hello"<<"how are you";Âè™ÊúâÊµÅÂºèÊó•ÂøóÊòØËá™Â∑±‰∏ªÂä®ÂèëÁöÑ
+#define LOG_INFO LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),INFO)
+#define LOG_DEBUG LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),DEBUG)
+#define LOG_WARNING LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),WARNING)
+#define LOG_ERROR LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),ERROR)
+#define LOG_FATAL LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),pthread_self(),FATAL)
 
-//ƒ⁄¥Êµº≥ˆ
-//00 01 02 65°≠°≠ ; ...a°≠°≠
-#define DUMP_INFO(data,size) LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
-pthread_self(),LOG_INFO,data,size)
-#define DUMP_DEBUG(data,size) LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
-pthread_self(),LOG_DEBUG,data,size)
-#define DUMP_WARNING(data,size) LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
-pthread_self(),LOG_WARNING,data,size)
-#define DUMP_ERROR(data,size) LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
-pthread_self(),LOG_ERROR,data,size)
-#define DUMP_FATAL(data,size) LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
-pthread_self(),LOG_FATAL,data,size)
+//ÂÜÖÂ≠òÂØºÂá∫
+//00 01 02 65‚Ä¶‚Ä¶ ; ...a‚Ä¶‚Ä¶
+#define DUMP_INFO(data,size) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
+pthread_self(),INFO,data,size))
+#define DUMP_DEBUG(data,size) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
+pthread_self(),DEBUG,data,size))
+#define DUMP_WARNING(data,size) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
+pthread_self(),WARNING,data,size))
+#define DUMP_ERROR(data,size) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
+pthread_self(),ERROR,data,size))
+#define DUMP_FATAL(data,size) CLoggerServer::Trace(LogInfo(__FILE__,__LINE__,__FUNCTION__,getpid(),\
+pthread_self(),FATAL,data,size))
 #endif
 

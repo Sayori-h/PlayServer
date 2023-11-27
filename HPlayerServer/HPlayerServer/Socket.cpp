@@ -1,4 +1,4 @@
-#include "Socket.h"
+ï»¿#include "Socket.h"
 
 CSockParam::CSockParam()
 {
@@ -63,6 +63,7 @@ void CSocketBase::Close()
 {
 	m_status = 3;
 	if (m_socket != -1) {
+		unlink(m_param.ip);
 		int fd = m_socket;
 		m_socket = -1;
 		close(fd);
@@ -74,8 +75,9 @@ int CLocalSocket::Init(const CSockParam& param)
 	if (m_status != 0)return -1;
 	m_param = param;
 	int type = m_param.attr & SOCK_ISUDP ? SOCK_DGRAM : SOCK_STREAM;
-	if (m_socket==-1)
+	if (m_socket == -1)
 		m_socket = socket(PF_LOCAL, type, 0);
+	else m_status = 2;//acceptæ¥çš„å¥—æ¥å­—ï¼Œå·²ç»å¤„äºè¿æ¥çŠ¶æ€
 	if (m_socket == -1)return -2;
 	int ret = 0;
 	if (m_param.attr & SOCK_ISSERVER) {
@@ -91,7 +93,7 @@ int CLocalSocket::Init(const CSockParam& param)
 		ret = fcntl(m_socket, F_SETFL, option);
 		if (ret == -1)return -6;
 	}
-	m_status = 1;
+	if (m_status == 0)m_status = 1;
 	return 0;
 }
 
@@ -115,7 +117,7 @@ int CLocalSocket::Link(CSocketBase** pCliSocket)
 		}
 	}
 	else {
-		//Init¸øµÄm_param
+		//Initç»™çš„m_param
 		ret = connect(m_socket, m_param.addrun(), sizeof(sockaddr_un));
 		if (ret != 0)return -6;
 	}
@@ -130,9 +132,9 @@ int CLocalSocket::Send(const Buffer& buffer)
 	while (index < static_cast<ssize_t>(buffer.size())) {
 		ssize_t len=write(m_socket, buffer + index, buffer.size() - index);
 		if (len == 0) {
-			return -2;//Á¬½Ó±»¹Ø±Õ
+			return -2;//è¿æ¥è¢«å…³é—­
 		}
-		if (len < 0)return -3; //Ğ´²Ù×÷Ê§°Ü
+		if (len < 0)return -3; //å†™æ“ä½œå¤±è´¥
 		index += len;
 	}
 	return 0;
@@ -140,6 +142,16 @@ int CLocalSocket::Send(const Buffer& buffer)
 
 int CLocalSocket::Recv(Buffer& buffer)
 {
+#ifdef _DEBUG
+	{
+		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> m_status=%d m_socket=%d\n",
+			__FILE__, __LINE__, __FUNCTION__, m_status, m_socket);
+		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+		fflush(pFile);
+	}
+#endif
 	if (m_status < 2 || (m_socket == -1))return -1;
 	ssize_t len = read(m_socket, buffer, buffer.size());
 	if (len > 0) {
@@ -148,13 +160,13 @@ int CLocalSocket::Recv(Buffer& buffer)
 	}
 	else if (len < 0) {
 		if (errno == EINTR || (errno == EAGAIN)) {
-			//Ã»ÓĞÊı¾İÊÕµ½
+			//æ²¡æœ‰æ•°æ®æ”¶åˆ°
 			buffer.clear();
 			return 0;
 		}
-		return -2;//½ÓÊÕ´íÎó
+		return -2;//æ¥æ”¶é”™è¯¯
 	}
-	return -3;//Á¬½Ó¹Ø±Õ
+	return -3;//è¿æ¥å…³é—­
 }
 
 void CLocalSocket::Close()

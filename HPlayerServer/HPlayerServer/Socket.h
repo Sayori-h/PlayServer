@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <string>
 #include <fcntl.h>
+#include "Debug.h"
 
 class Buffer :public std::string
 {
@@ -25,9 +26,9 @@ public:
 };
 
 enum SockAttr {
-	SOCK_ISSERVER = 0b0001,//ÊÇ·ñ·şÎñÆ÷ 1±íÊ¾ÊÇ 0±íÊ¾¿Í»§¶Ë
-	SOCK_ISNONBLOCK = 0b0010,//ÊÇ·ñ×èÈû 1±íÊ¾·Ç×èÈû 0±íÊ¾×èÈû
-	SOCK_ISUDP = 0b0100,//ÊÇ·ñÎªUDP 1±íÊ¾udp 0±íÊ¾tcp
+	SOCK_ISSERVER = 0b0001,//æ˜¯å¦æœåŠ¡å™¨ 1è¡¨ç¤ºæ˜¯ 0è¡¨ç¤ºå®¢æˆ·ç«¯
+	SOCK_ISNONBLOCK = 0b0010,//æ˜¯å¦é˜»å¡ 1è¡¨ç¤ºéé˜»å¡ 0è¡¨ç¤ºé˜»å¡
+	SOCK_ISUDP = 0b0100,//æ˜¯å¦ä¸ºUDP 1è¡¨ç¤ºudp 0è¡¨ç¤ºtcp
 };
 
 class CSockParam {
@@ -35,23 +36,23 @@ public:
 	CSockParam();
 	~CSockParam() {}
 	CSockParam(const CSockParam& param);
-	//ÍøÂçÌ×½Ó×ÖÍ¨ĞÅ¿¿IPºÍ¶Ë¿Ú
+	//ç½‘ç»œå¥—æ¥å­—é€šä¿¡é IPå’Œç«¯å£
 	CSockParam(const Buffer& ip, short port, int attr);
-	//±¾µØÌ×½Ó×ÖÍ¨ĞÅ¿¿Â·¾¶
+	//æœ¬åœ°å¥—æ¥å­—é€šä¿¡é è·¯å¾„
 	CSockParam(const Buffer& path, int attr);
 
 	CSockParam& operator=(const CSockParam& param);
 	sockaddr* addrin() {return (sockaddr*)&addr_in;}
 	sockaddr* addrun() {return (sockaddr*)&addr_un;}
 public:
-	//µØÖ·,´ó¼Ò¶¼ÒªÊ¹ÓÃµÄ¾Í²»ÓÃ¼Óm_
+	//åœ°å€,å¤§å®¶éƒ½è¦ä½¿ç”¨çš„å°±ä¸ç”¨åŠ m_
 	sockaddr_in addr_in;
 	sockaddr_un addr_un;
 	//ip
 	Buffer ip;
-	//¶Ë¿Ú
+	//ç«¯å£
 	short port;
-	//²Î¿¼SockAttr
+	//å‚è€ƒSockAttr
 	int attr;
 };
 
@@ -59,41 +60,41 @@ class CSocketBase
 {
 public:
 	CSocketBase();
-	//×¢ÒâĞéÎö¹¹
+	//æ³¨æ„è™šææ„
 	virtual ~CSocketBase();
-	//³õÊ¼»¯ ·şÎñÆ÷Ì×½Ó×Ö´´½¨¡¢bind¡¢listen  ¿Í»§¶ËÌ×½Ó×Ö´´½¨
+	//åˆå§‹åŒ– æœåŠ¡å™¨å¥—æ¥å­—åˆ›å»ºã€bindã€listen  å®¢æˆ·ç«¯å¥—æ¥å­—åˆ›å»º
 	virtual int Init(const CSockParam& param) = 0;
-	//Á¬½Ó£¨¶ÔÓÚ·şÎñÆ÷£¬µÈÓÚaccept£¬¶ÔÓÚ¿Í»§¶ËÊÇconnect ¶ÔÓÚudp¿ÉÒÔºöÂÔ)
+	//è¿æ¥ï¼ˆå¯¹äºæœåŠ¡å™¨ï¼Œç­‰äºacceptï¼Œå¯¹äºå®¢æˆ·ç«¯æ˜¯connect å¯¹äºudpå¯ä»¥å¿½ç•¥)
 	virtual int Link(CSocketBase** pCliSocket = nullptr) = 0;
-	//·¢ËÍÊı¾İ
+	//å‘é€æ•°æ®
 	virtual int Send(const Buffer& buffer) = 0;
-	//½ÓÊÕÊı¾İ
+	//æ¥æ”¶æ•°æ®
 	virtual int Recv(Buffer& buffer) = 0;
-	//¹Ø±ÕÁ¬½Ó
+	//å…³é—­è¿æ¥
 	virtual void Close();
 	virtual operator int() { return m_socket; }
 	virtual operator int()const { return m_socket; }
 protected:
-	//Ì×½Ó×ÖÃèÊö·û£¬Ä¬ÈÏÊÇ-1
+	//å¥—æ¥å­—æè¿°ç¬¦ï¼Œé»˜è®¤æ˜¯-1
 	int m_socket;
-	//×´Ì¬ 0³õÊ¼»¯Î´Íê³É 1³õÊ¼»¯Íê³É 2Á¬½ÓÍê³É 3ÒÑ¾­¹Ø±Õ
+	//çŠ¶æ€ 0åˆå§‹åŒ–æœªå®Œæˆ 1åˆå§‹åŒ–å®Œæˆ 2è¿æ¥å®Œæˆ 3å·²ç»å…³é—­
 	int m_status;
-	//³õÊ¼»¯²ÎÊı
+	//åˆå§‹åŒ–å‚æ•°
 	CSockParam m_param;
 };
 
 class CLocalSocket :public CSocketBase	
 {
 public:
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	virtual int Init(const CSockParam& param) override;
-	//Á¬½Ó£¨¶ÔÓÚ·şÎñÆ÷£¬µÈÓÚaccept£¬¶ÔÓÚ¿Í»§¶ËÊÇconnect¶ÔÓÚudp¿ÉÒÔºöÂÔ
-	virtual int Link(CSocketBase** pCliSocket) override;
-	//·¢ËÍÊı¾İ
+	//è¿æ¥ï¼ˆå¯¹äºæœåŠ¡å™¨ï¼Œç­‰äºacceptï¼Œå¯¹äºå®¢æˆ·ç«¯æ˜¯connectå¯¹äºudpå¯ä»¥å¿½ç•¥
+	virtual int Link(CSocketBase** pCliSocket=nullptr) override;
+	//å‘é€æ•°æ®
 	virtual int Send(const Buffer& buffer) override;
-	//½ÓÊÕÊı¾İ
+	//æ¥æ”¶æ•°æ®
 	virtual int Recv(Buffer& buffer) override;
-	//¹Ø±ÕÁ¬½Ó
+	//å…³é—­è¿æ¥
 	virtual void Close() override;
 public:
 	CLocalSocket() :CSocketBase(){}

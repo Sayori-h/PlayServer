@@ -1,14 +1,22 @@
-#include "Logger.h"
+ï»¿#include "Logger.h"
 
 CLoggerServer::CLoggerServer() :
 	m_thread(&CLoggerServer::ThreadFunc, this)
 {
 	m_server = nullptr;
-	m_path = "./log/" + GetTimeStr() + ".log";
+	char curPath[256] = "";
+	getcwd(curPath, sizeof(curPath));
+	m_path = curPath;
+	m_path += "/log/" + GetTimeStr() + ".log";
 #ifdef _DEBUG
-	snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> path=%s\n", __FILE__, __LINE__, __FUNCTION__, m_path);
-	fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
-	fflush(pFile);
+	{
+		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> path=%s\n", __FILE__, 
+			__LINE__, __FUNCTION__, (char*)m_path);
+		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+		fflush(pFile);
+	}
 #endif // DEBUG 
 }
 
@@ -36,51 +44,149 @@ int CLoggerServer::Start()
 		Close();
 		return -5;
 	}
-	ret = m_thread.Start();
+	ret=m_epoll.Add(*m_server, EpollData((void*)m_server), EPOLLIN | EPOLLERR);
 	if (ret != 0) {
 		Close();
 		return -6;
+	}
+	ret = m_thread.Start();
+	if (ret != 0) {
+#ifdef _DEBUG
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> pid=%d errno:%d msg:%s ret:%d\n",
+				__FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno), ret);
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
+#endif
+		Close();
+		return -7;
 	}
 	return 0;
 }
 
 int CLoggerServer::ThreadFunc()
 {
+#ifdef _DEBUG
+	{
+		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> %d %d %p\n", __FILE__,
+			__LINE__, __FUNCTION__, m_thread.isVaild(), (int)m_epoll, m_server);
+		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+		fflush(pFile);
+	}
+#endif
 	std::vector<epoll_event> events;
 	std::map<int, CSocketBase*> mapClients;
 	while (m_thread.isVaild() && (m_epoll != -1) && (m_server != nullptr)) {
 		ssize_t ret = m_epoll.WaitEvents(events, 1);
+#ifdef DEBUG
+	{
+		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+			__FILE__, __LINE__, __FUNCTION__, ret);
+		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+		fflush(pFile);
+	}
+#endif
 		if (ret < 0)break;
 		if (ret > 0) {
 			ssize_t i = 0;
 			for (; i < ret; i++) {
-				if (events[i].events & EPOLLERR) {//ÓĞ´íÎó
+				if (events[i].events & EPOLLERR) {//æœ‰é”™è¯¯
 					break;
 				}
-				else if (events[i].events & EPOLLIN) {//Ì×½Ó×ÖÉÏÓĞÊı¾İ¿É¶Á
+				else if (events[i].events & EPOLLIN) {//å¥—æ¥å­—ä¸Šæœ‰æ•°æ®å¯è¯»
 					if (events[i].data.ptr == m_server) {
 						CSocketBase* pClient = nullptr;
 						int r = m_server->Link(&pClient);
+#ifdef _DEBUG
+						{
+							std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+							memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+							snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
+								__FILE__, __LINE__, __FUNCTION__, r);
+							fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+							fflush(pFile);
+						}
+#endif
 						if (r < 0)continue;
 						r = m_epoll.Add(*pClient, EpollData((void*)pClient), EPOLLIN | EPOLLERR);
+#ifdef _DEBUG
+						{
+							std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+							memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+							snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
+								__FILE__, __LINE__, __FUNCTION__, r);
+							fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+							fflush(pFile);
+						}
+#endif
 						if (r < 0) {
 							delete pClient;
 							continue;
 						}
 						auto it = mapClients.find(*pClient);
-						if (it->second != nullptr)delete it->second;
+						if (it != mapClients.end()) {
+							if (it->second != nullptr)delete it->second;
+						}
 						mapClients[*pClient] = pClient;
+#ifdef _DEBUG
+						{
+							std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+							memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+							snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s>\n",
+								__FILE__, __LINE__, __FUNCTION__);
+							fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+							fflush(pFile);
+						}
+#endif
 					}
 					else {
+#ifdef _DEBUG
+						{
+							std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+							memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+							snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ptr=%p\n",
+								__FILE__, __LINE__, __FUNCTION__, events[i].data.ptr);
+							fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+							fflush(pFile);
+						}
+#endif
 						CSocketBase* pClient = (CSocketBase*)events[i].data.ptr;
 						if (pClient != nullptr) {
 							Buffer data(1024 * 1024);
 							int r = pClient->Recv(data);
+#ifdef _DEBUG
+							{
+								std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+								memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+								snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
+									__FILE__, __LINE__, __FUNCTION__, r);
+								fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+								fflush(pFile);
+							}
+#endif
 							if (r <= 0) {
 								delete pClient;
 								mapClients[*pClient] = nullptr;
 							}
-							else WriteLog(data);
+							else {
+#ifdef _DEBUG
+								{
+									std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+									memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+									snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> data=%s\n",
+										__FILE__, __LINE__, __FUNCTION__, data);
+									fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+									fflush(pFile);
+								}
+#endif
+								WriteLog(data);
+							}
 						}
 					}
 				}
@@ -109,20 +215,56 @@ int CLoggerServer::Close()
 
 void CLoggerServer::Trace(const LogInfo& info)
 {
+	int ret = 0;
 	static thread_local CLocalSocket client;
 	if (client == -1) {
-		int ret = 0;
 		ret = client.Init(CSockParam("./log/server.sock", 0));
 		if (ret != 0) {
 #ifdef _DEBUG
-			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", 
+				__FILE__, __LINE__, __FUNCTION__, ret);
 			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
 			fflush(pFile);
+		}
 #endif // DEBUG 
 			return;
 		}
+#ifdef _DEBUG
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d client=%d\n",
+				__FILE__, __LINE__, __FUNCTION__, ret, (int)client);
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
+#endif // DEBUG 
+		ret = client.Link();
+#ifdef _DEBUG
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d client=%d\n",
+				__FILE__, __LINE__, __FUNCTION__, ret, (int)client);
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
+#endif // DEBUG 
 	}
-	client.Send(info);
+	ret=client.Send(info);
+#ifdef _DEBUG
+	{
+		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d client=%d\n",
+			__FILE__, __LINE__, __FUNCTION__, ret, (int)client);
+		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+		fflush(pFile);
+	}
+#endif // DEBUG 
 }
 
 Buffer CLoggerServer::GetTimeStr()
@@ -132,7 +274,7 @@ Buffer CLoggerServer::GetTimeStr()
 	ftime(&tmb);
 	tm* pTm = localtime(&tmb.time);
 	int nSize = snprintf(result, result.size(),
-		"%04d-%02d-%02d %02d-%02d-%02d %03d",
+		"%04d-%02d-%02d_%02d-%02d-%02d.%03d",
 		pTm->tm_year + 1900, pTm->tm_mon + 1, pTm->tm_mday,
 		pTm->tm_hour, pTm->tm_min, pTm->tm_sec, tmb.millitm);
 	result.resize(nSize);
@@ -146,9 +288,13 @@ void CLoggerServer::WriteLog(const Buffer& data)
 		fwrite(data, 1, data.size(), pfile);
 		fflush(pfile);
 #ifdef _DEBUG
-		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> log=%s\n", __FILE__, __LINE__, __FUNCTION__, data);
-		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
-		fflush(pFile);
+		{
+			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+			memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> log=%s\n", __FILE__, __LINE__, __FUNCTION__, data);
+			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+			fflush(pFile);
+		}
 #endif // DEBUG 
 	}
 }
@@ -159,7 +305,7 @@ LogInfo::LogInfo(const char* file, int line, const char* func, pid_t pid,
 	const char sLogType[][8] = { "INFO","DEBUG","WARNING","ERROR","FATAL" };
 	char* buf = nullptr;
 	m_bIsStreamLog = false;
-	int count = asprintf(&buf, "%s(%d):[%s][%s]<%d-%d>(%s)\n", file, line, sLogType[logType],
+	int count = asprintf(&buf, "%s(%d):[%s][%s]<%d-%d>(%s) ", file, line, sLogType[logType],
 		(char*)CLoggerServer::GetTimeStr(), pid, tid, func);
 	if (count > 0) {
 		m_buf = buf;
@@ -174,6 +320,7 @@ LogInfo::LogInfo(const char* file, int line, const char* func, pid_t pid,
 		m_buf += buf;
 		free(buf);
 	}
+	m_buf += '\n';
 	va_end(ap);
 }
 
@@ -181,24 +328,24 @@ LogInfo::LogInfo(const char* file, int line, const char* func,
 	pid_t pid, pthread_t tid, int logType)
 {
 	char* buf = nullptr;
-	m_bIsStreamLog = true;//×Ô¼ºÖ÷¶¯·¢ËÍµÄ Á÷Ê½ÈÕÖ¾	
+	m_bIsStreamLog = true;//è‡ªå·±ä¸»åŠ¨å‘é€çš„ æµå¼æ—¥å¿—	
 	const char sLogType[][8] = { "INFO","DEBUG","WARNING","ERROR","FATAL" };
-	int count = asprintf(&buf, "%s(%d):[%s][%s]<%d-%d>(%s)\n", file, line, sLogType[logType],
+	int count = asprintf(&buf, "%s(%d):[%s][%s]<%d-%d>(%s) ", file, line, sLogType[logType],
 		(char*)CLoggerServer::GetTimeStr(), pid, tid, func);
 	if (count > 0) {
 		m_buf = buf;
 		free(buf);
 	}
 }
-/*²âÊÔÓÃÀı£º
+/*æµ‹è¯•ç”¨ä¾‹ï¼š
 const char* message = "Hello, Logging!";
 LogInfo log("example.cpp", 42, "main", getpid(), pthread_self(), LOG_DEBUG, message, strlen(message));
 
-example.cpp(42):[DEBUG][Ê±¼ä]<½ø³ÌID-Ïß³ÌID>(main)
+example.cpp(42):[DEBUG][æ—¶é—´]<è¿›ç¨‹ID-çº¿ç¨‹ID>(main)
 48 65 6C 6C 6F 2C 20 4C 6F 67 67 69 6E 67 21 00    ; Hello, Logging!.
 
-ºËĞÄÊÇÍ¨¹ı snprintf ½«Ã¿¸ö×Ö½ÚÒÔÁ½Î»µÄÊ®Áù½øÖÆ¸ñÊ½×·¼Óµ½×Ö·û´® m_buf ÖĞ¡£ÔÚÃ¿ĞĞµÄÄ©Î²£¬½«¿É¶ÁµÄ×Ö·û±íÊ¾×·¼Óµ½×Ö·û´®ÖĞ¡£
-Èç¹ûÊı¾İ×Ü³¤¶È²»ÊÇ16µÄ±¶Êı£¬×îºóÒ»ĞĞ»á½øĞĞÌØÊâ´¦Àí£¬È·±£¶ÔÆëºÍÏÔÊ¾¡£
+æ ¸å¿ƒæ˜¯é€šè¿‡ snprintf å°†æ¯ä¸ªå­—èŠ‚ä»¥ä¸¤ä½çš„åå…­è¿›åˆ¶æ ¼å¼è¿½åŠ åˆ°å­—ç¬¦ä¸² m_buf ä¸­ã€‚åœ¨æ¯è¡Œçš„æœ«å°¾ï¼Œå°†å¯è¯»çš„å­—ç¬¦è¡¨ç¤ºè¿½åŠ åˆ°å­—ç¬¦ä¸²ä¸­ã€‚
+å¦‚æœæ•°æ®æ€»é•¿åº¦ä¸æ˜¯16çš„å€æ•°ï¼Œæœ€åä¸€è¡Œä¼šè¿›è¡Œç‰¹æ®Šå¤„ç†ï¼Œç¡®ä¿å¯¹é½å’Œæ˜¾ç¤ºã€‚
 */
 LogInfo::LogInfo(const char* file, int line, const char* func,
 	pid_t pid, pthread_t tid, int logType, void* pData, size_t nSize)
@@ -222,31 +369,38 @@ LogInfo::LogInfo(const char* file, int line, const char* func,
 		m_buf += buf;
 		if (0 == ((i + 1) % 16)) {
 			m_buf += "\t; ";
-			for (size_t j = i - 15; j <= i; j++) {
+			char buf[17] = "";
+			memcpy(buf, Data + i - 15, 16);
+			for (int j = 0; j < 16; j++)
+				if (buf[j] < 32&&(buf[j]>=0))buf[j] = '.';
+			m_buf += buf;
+			/*for (size_t j = i - 15; j <= i; j++) {
+				
 				if ((Data[j] & 0xFF) > 31 && ((Data[j] & 0xFF) < 0x7f))
 					m_buf += Data[i];
 				else m_buf += '.';
-			}
+			}*/
 			m_buf += '\n';
 		}
-
-		//´¦Àí×îºóÒ»ĞĞ
-		size_t k = i % 16;
-		if (k != 0) {
-			for (size_t j = 0; j < 16 - k; j++) m_buf += "   ";
-			m_buf += "\t;";
-			for (size_t j = i - k; j <= i; j++) {
-				if ((Data[i] & 0xFF) > 31 && ((Data[j] & 0xFF) < 0x7F))
-					m_buf += Data[i];
-				else m_buf += '.';
-			}
-			m_buf += "\n";
-		}
 	}
+	//å¤„ç†æœ€åä¸€è¡Œ
+	size_t k = i % 16;
+	if (k != 0) {
+		for (size_t j = 0; j < 16 - k; j++) m_buf += "   ";
+		m_buf += "\t; ";
+		for (size_t j = i - k; j <= i; j++) {
+			if ((Data[i] & 0xFF) > 31 && ((Data[j] & 0xFF) < 0x7F))
+				m_buf += Data[i];
+			else m_buf += '.';
+		}
+		m_buf += "\n";
+	}	
 }
 
 LogInfo::~LogInfo()
 {
-	if (m_bIsStreamLog)
+	if (m_bIsStreamLog) {
+		m_buf += '\n';
 		CLoggerServer::Trace(*this);
+	}
 }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
@@ -46,82 +46,80 @@ public:
         return 0;
     }
 
-    int SendFD(int fd) {//mainprocess
-        struct msghdr msg = {};
-        struct iovec iov[2];
-        iov[0].iov_base = (char*)"edoyun";
-        iov[0].iov_len = 7;
-        iov[1].iov_base = (char*)"jueding";
-        iov[1].iov_len = 8;
+    int SendFD(int fd) {//主进程完成
+        struct msghdr msg {};
+        iovec iov[2];
+        char buf[2][10] = { "edoyun","jueding" };
+        iov[0].iov_base = buf[0];
+        iov[0].iov_len = sizeof(buf[0]);
+        iov[1].iov_base = buf[1];
+        iov[1].iov_len = sizeof(buf[1]);
+        msg.msg_iov = iov;
+        msg.msg_iovlen = 2;
 
-        cmsghdr* cmsg = new cmsghdr();
-        memset(cmsg, 0, sizeof(*cmsg));
+        // 下面的数据，才是我们需要传递的。
+        cmsghdr* cmsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int)));
         if (cmsg == nullptr) return -1;
-
         cmsg->cmsg_len = CMSG_LEN(sizeof(int));
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
         *(int*)CMSG_DATA(cmsg) = fd;
-
         msg.msg_control = cmsg;
         msg.msg_controllen = cmsg->cmsg_len;
-        msg.msg_iov = iov;
-        msg.msg_iovlen = 2;
 
         ssize_t ret = sendmsg(pipes[1], &msg, 0);
-        delete cmsg;
-
-        if (ret == -1) return -2;
+        free(cmsg);
+        if (ret == -1) {
+            return -2;
+        }
         return 0;
     }
 
-    int RecvFD(int& fd) {//subprocess
-        struct msghdr msg = {};
-        struct iovec iov[2];
+    int RecvFD(int& fd)
+    {
+        struct msghdr msg{};
+        iovec iov[2];
         char buf[][10] = { "","" };
         iov[0].iov_base = buf[0];
         iov[0].iov_len = sizeof(buf[0]);
         iov[1].iov_base = buf[1];
         iov[1].iov_len = sizeof(buf[1]);
-
-        cmsghdr* cmsg = new cmsghdr();
-        memset(cmsg, 0, sizeof(*cmsg));
-        if (cmsg == nullptr) return -1;
-
-        cmsg->cmsg_len = CMSG_LEN(sizeof(int));
-        cmsg->cmsg_level = SOL_SOCKET;
-        cmsg->cmsg_type = SCM_RIGHTS;
-
-        msg.msg_control = cmsg;
-        msg.msg_controllen = cmsg->cmsg_len;
         msg.msg_iov = iov;
         msg.msg_iovlen = 2;
 
+        cmsghdr* cmsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int)));
+        if (cmsg == NULL)return -1;
+        cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        msg.msg_control = cmsg;
+        msg.msg_controllen = CMSG_LEN(sizeof(int));
         ssize_t ret = recvmsg(pipes[0], &msg, 0);
-
-        if (ret == -1) return -2;
+        if (ret == -1) {
+            free(cmsg);
+            return -2;
+        }
         fd = *(int*)CMSG_DATA(cmsg);
-
-        delete cmsg;
+        free(cmsg);
         return 0;
     }
 
     static int SwitchDeamon() {
         pid_t ret = fork();
         if (ret == -1) return -1;
-        if (ret > 0) std::exit(0);  // �����̵���Ϊֹ
+        if (ret > 0) std::exit(0);  // 主进程到此为止
 
-        // �ӽ�����������
+        // 子进程内容如下
         ret = setsid();
-        if (ret == -1) return -2; // ʧ�ܣ��򷵻�
+        if (ret == -1) return -2; // 失败，则返回
 
         ret = fork();
         if (ret == -1) return -3;
-        if (ret > 0) std::exit(0);  // �ӽ��̵���Ϊֹ
+        if (ret > 0) std::exit(0);  // 子进程到此为止
 
-        // ����̵��������£������ػ�״̬
-        chdir("/");  // �޸Ĺ���Ŀ¼����Ŀ¼
-        // �رձ�׼���롢��׼����ͱ�׼�������
+        // 孙进程的内容如下，进入守护状态
+        chdir("/");  // 修改工作目录到根目录
+        // 关闭标准输入、标准输出和标准错误输出
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
         close(STDERR_FILENO);

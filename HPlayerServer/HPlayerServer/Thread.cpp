@@ -1,4 +1,4 @@
-#include "Thread.h"
+ï»¿#include "Thread.h"
 std::map<pthread_t, CThread*> CThread::m_mapThread;
 
 CThread::CThread()
@@ -14,17 +14,17 @@ int CThread::Start()
 	pthread_attr_t attr;
 	ret=pthread_attr_init(&attr);
 	if (ret)return -1;
-	//1.²»ÐèÒªÖ÷Ïß³Ìjoin
+	//1.ä¸éœ€è¦ä¸»çº¿ç¨‹join
 	ret=pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	if (ret)return -2;
-	//2.ÉèÖÃÏß³Ì¾ºÕù·¶Î§Îª½ø³ÌÄÚ²¿
-	pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+	//2.è®¾ç½®çº¿ç¨‹ç«žäº‰èŒƒå›´ä¸ºè¿›ç¨‹å†…éƒ¨,é»˜è®¤çš„
+	//ret=pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+	//if (ret)return -3;
+	ret=pthread_create(&m_thread, &attr, CThread::ThreadEntry, this);
 	if (ret)return -3;
-	pthread_create(&m_thread, &attr, CThread::ThreadEntry, this);
-	if (ret)return -4;
 	m_mapThread[m_thread] = this;
-	pthread_attr_destroy(&attr);
-	if (ret)return -5;
+	ret=pthread_attr_destroy(&attr);
+	if (ret)return -4;
 	return 0;
 }
 
@@ -63,7 +63,7 @@ int CThread::Stop()
 
 bool CThread::isVaild() const
 {
-	return m_thread==0;
+	return m_thread!=0;
 }
 
 void* CThread::ThreadEntry(void* arg)
@@ -78,7 +78,7 @@ void* CThread::ThreadEntry(void* arg)
 	sigaction(SIGUSR2, &act, NULL);
 
 	thiz->EnterThread();
-	//²»ÊÇÈßÓà£¬ÓÐ¿ÉÄÜ±»stopº¯Êý°Ñm_thread¸øÇåÁãÁË
+	//ä¸æ˜¯å†—ä½™ï¼Œæœ‰å¯èƒ½è¢«stopå‡½æ•°æŠŠm_threadç»™æ¸…é›¶äº†
 	if (thiz->m_thread)thiz->m_thread = 0;
 	pthread_t thread = pthread_self();
 	auto it = m_mapThread.find(thread);
@@ -112,9 +112,14 @@ void CThread::EnterThread()
 		int ret = (*m_function)();
 		if (ret != 0) {
 #ifdef _DEBUG
-			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
-			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
-			fflush(pFile);
+			{
+				std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+				memset(szBufInfo, 0, sizeof(szBufInfo));  // æ¸…é›¶ç¼“å†²åŒº
+				snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", 
+					__FILE__, __LINE__, __FUNCTION__, ret);
+				fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+				fflush(pFile);
+			}
 #endif // DEBUG  
 		}
 	}

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <vector>
@@ -41,7 +41,7 @@ public:
     CEpoll& operator=(const CEpoll&) = delete;
 public:
     int Create(unsigned count);
-    //Ğ¡ÓÚ0±íÊ¾´íÎóµÈÓÚ0±íÊ¾Ã»ÓĞÊÂÇé·¢Éú´óÓÚ0±íÊ¾³É¹¦ÄÃµ½ÊÂ¼ş
+    //å°äº0è¡¨ç¤ºé”™è¯¯ç­‰äº0è¡¨ç¤ºæ²¡æœ‰äº‹æƒ…å‘ç”Ÿå¤§äº0è¡¨ç¤ºæˆåŠŸæ‹¿åˆ°äº‹ä»¶
     ssize_t WaitEvents(std::vector<epoll_event>& events, int timeout = 10);
     int Add(int fd, const EpollData& data = EpollData((void*)0), uint32_t events = EPOLLIN);
     int Modify(int fd, uint32_t events, const EpollData& data = EpollData((void*)0));

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <unistd.h>
 #include <pthread.h>
 #include <fcntl.h>
@@ -28,22 +28,22 @@ public:
 		return 0;
 	}
 
-	int Start();//¿ªÊ¼/»Ö¸´
-	int Pause();//ÔİÍ£
-	int Stop();//Í£Ö¹
-	bool isVaild()const;//ÖØÆôÏß³Ì(ÉÏÒ»´ÎÔËĞĞ±ØĞë½áÊø)
+	int Start();//å¼€å§‹/æ¢å¤
+	int Pause();//æš‚åœ
+	int Stop();//åœæ­¢
+	bool isVaild()const;
 private:
-	//½ûÖ¹¸´ÖÆ
+	//ç¦æ­¢å¤åˆ¶
 	CThread(const CThread&) = delete;
 	CThread operator=(const CThread&) = delete;
 
 	static void* ThreadEntry(void* arg);//__stdcall
-	static void Sigaction(int signo, siginfo_t* info, void* context);//´¦ÀíĞÅºÅÁ¿
+	static void Sigaction(int signo, siginfo_t* info, void* context);//å¤„ç†ä¿¡å·é‡
 	void EnterThread();//__thiscall
 private:
 	CFunction* m_function;
 	pthread_t m_thread;
-	bool m_bPaused;//true ±íÊ¾ÔİÍ£ false±íÊ¾ÔËĞĞÖĞ
+	bool m_bPaused;//true è¡¨ç¤ºæš‚åœ falseè¡¨ç¤ºè¿è¡Œä¸­
 	static std::map<pthread_t, CThread*>m_mapThread;
 };
 
