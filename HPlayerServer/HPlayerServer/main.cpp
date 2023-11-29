@@ -1,6 +1,7 @@
 ﻿#include <cerrno>
 #include "Process.h"
 #include "Logger.h"
+#include "ThreadPool.h"
 
 int CreateLogServer(CProcess* proc) {
     CLoggerServer server;
@@ -126,7 +127,9 @@ int main()
 #endif // DEBUG  
         return -1;
     }
+
     LogTest();
+
 #ifdef _DEBUG
     {
         std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
@@ -197,7 +200,87 @@ int main()
     }
     write(fd, "Fd Send Test...\n", 16);
     close(fd);
+
+    CThreadPool pool;
+    ret=pool.Start(4);
+    if (ret != 0) {
+#ifdef _DEBUG
+        {
+            std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+            memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+                __FILE__, __LINE__, __FUNCTION__, ret);
+            snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+                "errno:%d msg:%s\n", errno, strerror(errno));
+            fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+            fflush(pFile);
+        }
+#endif // DEBUG  
+    }
+    ret=pool.AddTask(LogTest);
+    if (ret != 0) {
+#ifdef _DEBUG
+        {
+            std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+            memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+                __FILE__, __LINE__, __FUNCTION__, ret);
+            snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+                "errno:%d msg:%s\n", errno, strerror(errno));
+            fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+            fflush(pFile);
+        }
+#endif // DEBUG  
+    }
+    ret=pool.AddTask(LogTest);
+    if (ret != 0) {
+#ifdef _DEBUG
+        {
+            std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+            memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+                __FILE__, __LINE__, __FUNCTION__, ret);
+            snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+                "errno:%d msg:%s\n", errno, strerror(errno));
+            fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+            fflush(pFile);
+        }
+#endif // DEBUG  
+    }
+    ret=pool.AddTask(LogTest);
+    if (ret != 0) {
+#ifdef _DEBUG
+        {
+            std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+            memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+                __FILE__, __LINE__, __FUNCTION__, ret);
+            snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+                "errno:%d msg:%s\n", errno, strerror(errno));
+            fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+            fflush(pFile);
+        }
+#endif // DEBUG  
+    }
+    ret=pool.AddTask(LogTest);
+    if (ret != 0) {
+#ifdef _DEBUG
+        {
+            std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+            memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
+                __FILE__, __LINE__, __FUNCTION__, ret);
+            snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+                "errno:%d msg:%s\n", errno, strerror(errno));
+            fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+            fflush(pFile);
+        }
+#endif // DEBUG  
+    }
+
     fclose(pFile);
+    (void)getchar();
+    pool.Close();
     proclog.SendFD(-1);
     (void)getchar();
     return 0;
