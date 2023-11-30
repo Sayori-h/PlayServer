@@ -91,10 +91,10 @@ int LogTest()
 {
     char buffer[] = "hello world! 恕瑞玛";
     usleep(1000 * 100);
-    TRACE_INFO("here is log %d %c %f %g %s 哈哈 嘻嘻我来了", 10, 'A', 1.0f, 2.0, buffer);
+    TRACE_INFO("here is log %d %c %f %g %s 哈哈 日志第一条", 10, 'A', 1.0f, 2.0, buffer);
     DUMP_DEBUG((void*)buffer, (size_t)sizeof(buffer));
     LOG_ERROR << 100 << " " << 'S' << " " << 0.12345f
-        << " " << 1.23456789 << " " << buffer << " 诺克萨斯";
+        << " " << 1.23456789 << " " << buffer << " 日志最后一条";
     return 0;
 }
 

@@ -72,6 +72,7 @@ int CLoggerServer::ThreadFunc()
 #ifdef _DEBUG
 	{
 		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+		memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
 		snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> %d %d %p\n", __FILE__,
 			__LINE__, __FUNCTION__, m_thread.isVaild(), (int)m_epoll, m_server);
 		fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
@@ -81,8 +82,8 @@ int CLoggerServer::ThreadFunc()
 	std::vector<epoll_event> events;
 	std::map<int, CSocketBase*> mapClients;
 	while (m_thread.isVaild() && (m_epoll != -1) && (m_server != nullptr)) {
-		ssize_t ret = m_epoll.WaitEvents(events, 1);
-#ifdef DEBUG
+		ssize_t ret = m_epoll.WaitEvents(events, 1000);
+#ifdef _DEBUG
 	{
 		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
 		memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
@@ -166,13 +167,25 @@ int CLoggerServer::ThreadFunc()
 								memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
 								snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
 									__FILE__, __LINE__, __FUNCTION__, r);
+								snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
+									"errno:%d msg:%s\n", errno, strerror(errno));
 								fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
 								fflush(pFile);
 							}
 #endif
 							if (r <= 0) {
-								delete pClient;
 								mapClients[*pClient] = nullptr;
+								delete pClient;
+#ifdef _DEBUG
+								{
+									std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+									memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+									snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
+										__FILE__, __LINE__, __FUNCTION__, r);
+									fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+									fflush(pFile);
+								}
+#endif
 							}
 							else {
 #ifdef _DEBUG
@@ -180,12 +193,22 @@ int CLoggerServer::ThreadFunc()
 									std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
 									memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
 									snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> data=%s\n",
-										__FILE__, __LINE__, __FUNCTION__, data);
+										__FILE__, __LINE__, __FUNCTION__, (char*)data);
 									fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
 									fflush(pFile);
 								}
 #endif
 								WriteLog(data);
+#ifdef _DEBUG
+								{
+									std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
+									memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
+									snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s>\n",
+										__FILE__, __LINE__, __FUNCTION__);
+									fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
+									fflush(pFile);
+								}
+#endif
 							}
 						}
 					}
@@ -285,13 +308,13 @@ void CLoggerServer::WriteLog(const Buffer& data)
 {
 	if (m_file != nullptr) {
 		FILE* pfile = m_file;
-		fwrite(data, 1, data.size(), pfile);
+		fwrite((char*)data, 1, data.size(), pfile);
 		fflush(pfile);
 #ifdef _DEBUG
 		{
 			std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
 			memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> log=%s\n", __FILE__, __LINE__, __FUNCTION__, data);
+			snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> log=%s\n", __FILE__, __LINE__, __FUNCTION__, (char*)data);
 			fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
 			fflush(pFile);
 		}

@@ -35,8 +35,9 @@ int CThreadPool::Start(unsigned count)
 	if (ret != 0)return -5;
 	ret = m_epoll.Add(*m_server, static_cast<EpollData>((void*)m_server));
 	if (ret != 0)return -6;
-	for (unsigned i = 0; i < m_threads.size(); i++) {
-		m_threads[i] = new CThread(&CThreadPool::TaskDispatch, this);
+	//m_threads.resize(count);
+	for (unsigned i = 0; i < count; i++) {
+		m_threads.push_back(new CThread(&CThreadPool::TaskDispatch, this));
 		if (m_threads[i] == nullptr)return -7;
 		ret = m_threads[i]->Start();
 		if (ret != 0)return - 8;

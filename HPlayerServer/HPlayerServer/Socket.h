@@ -17,7 +17,7 @@ public:
 	Buffer(const char* str) :std::string(str){}
 	operator char* () { return (char*)c_str(); }
 	operator char* () const { return (char*)c_str(); }
-	//operator const char* () const{ return c_str(); }
+	operator const char* () const{ return c_str(); }
 	Buffer& operator=(const char* str) {
 		resize(strlen(str));
 		strcpy((char*)data(), str);

@@ -63,6 +63,7 @@ void CSocketBase::Close()
 {
 	m_status = 3;
 	if (m_socket != -1) {
+		if(m_param.attr&SOCK_ISSERVER)
 		unlink(m_param.ip);
 		int fd = m_socket;
 		m_socket = -1;
@@ -130,7 +131,7 @@ int CLocalSocket::Send(const Buffer& buffer)
 	if (m_status < 2 || (m_socket == -1))return -1;
 	ssize_t index = 0;
 	while (index < static_cast<ssize_t>(buffer.size())) {
-		ssize_t len=write(m_socket, buffer + index, buffer.size() - index);
+		ssize_t len=write(m_socket, (char*)buffer + index, buffer.size() - index);
 		if (len == 0) {
 			return -2;//连接被关闭
 		}
