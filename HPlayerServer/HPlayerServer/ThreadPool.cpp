@@ -60,6 +60,11 @@ void CThreadPool::Close()
 	unlink(m_path);
 }
 
+size_t CThreadPool::Size() const
+{
+	return m_threads.size();
+}
+
 int CThreadPool::TaskDispatch()
 {
 	while (m_epoll != -1) {

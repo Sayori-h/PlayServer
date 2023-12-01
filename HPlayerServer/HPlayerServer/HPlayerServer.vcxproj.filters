@@ -30,6 +30,9 @@
     <ClCompile Include="ThreadPool.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -54,6 +57,9 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="ThreadPool.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>

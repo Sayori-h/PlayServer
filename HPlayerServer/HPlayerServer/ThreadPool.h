@@ -14,6 +14,7 @@ public:
 public:
 	int Start(unsigned count);
 	void Close();
+	size_t Size()const;
 	template<typename _FUNCTION_, typename..._ARGS_>
 	int AddTask(_FUNCTION_ func, _ARGS_... args) {
 		static thread_local CSocket client;
