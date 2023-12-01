@@ -34,7 +34,7 @@ int CLoggerServer::Start()
 	if (m_file == NULL)return -2;
 	int ret = m_epoll.Create(1);
 	if (ret != 0)return -3;
-	m_server = new CLocalSocket();
+	m_server = new CSocket();
 	if (m_server == nullptr) {
 		Close();
 		return -4;
@@ -82,8 +82,8 @@ int CLoggerServer::ThreadFunc()
 	std::vector<epoll_event> events;
 	std::map<int, CSocketBase*> mapClients;
 	while (m_thread.isVaild() && (m_epoll != -1) && (m_server != nullptr)) {
-		ssize_t ret = m_epoll.WaitEvents(events, 1000);
-#ifdef _DEBUG
+		ssize_t ret = m_epoll.WaitEvents(events, 1);
+#ifdef DEBUG
 	{
 		std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
 		memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
@@ -176,16 +176,6 @@ int CLoggerServer::ThreadFunc()
 							if (r <= 0) {
 								mapClients[*pClient] = nullptr;
 								delete pClient;
-#ifdef _DEBUG
-								{
-									std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
-									memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-									snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> res=%d\n",
-										__FILE__, __LINE__, __FUNCTION__, r);
-									fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
-									fflush(pFile);
-								}
-#endif
 							}
 							else {
 #ifdef _DEBUG
@@ -239,7 +229,7 @@ int CLoggerServer::Close()
 void CLoggerServer::Trace(const LogInfo& info)
 {
 	int ret = 0;
-	static thread_local CLocalSocket client;
+	static thread_local CSocket client;
 	if (client == -1) {
 		ret = client.Init(CSockParam("./log/server.sock", 0));
 		if (ret != 0) {

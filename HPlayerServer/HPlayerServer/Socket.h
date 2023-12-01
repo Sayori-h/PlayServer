@@ -29,6 +29,7 @@ enum SockAttr {
 	SOCK_ISSERVER = 0b0001,//是否服务器 1表示是 0表示客户端
 	SOCK_ISNONBLOCK = 0b0010,//是否阻塞 1表示非阻塞 0表示阻塞
 	SOCK_ISUDP = 0b0100,//是否为UDP 1表示udp 0表示tcp
+	SOCK_ISIP=0b1000,//是否为IP协议 1表示IP协议 0表示本地套接字
 };
 
 class CSockParam {
@@ -71,7 +72,7 @@ public:
 	//接收数据
 	virtual int Recv(Buffer& buffer) = 0;
 	//关闭连接
-	virtual void Close();
+	virtual int Close();
 	virtual operator int() { return m_socket; }
 	virtual operator int()const { return m_socket; }
 protected:
@@ -83,7 +84,7 @@ protected:
 	CSockParam m_param;
 };
 
-class CLocalSocket :public CSocketBase	
+class CSocket :public CSocketBase	
 {
 public:
 	//初始化
@@ -95,14 +96,14 @@ public:
 	//接收数据
 	virtual int Recv(Buffer& buffer) override;
 	//关闭连接
-	virtual void Close() override;
+	virtual int Close() override;
 public:
-	CLocalSocket() :CSocketBase(){}
-	CLocalSocket(int sock);
-	virtual ~CLocalSocket();
+	CSocket() :CSocketBase(){}
+	CSocket(int sock);
+	virtual ~CSocket();
 public:
-	CLocalSocket(const CLocalSocket&) = delete;
-	CLocalSocket& operator=(const CLocalSocket&) = delete;
+	CSocket(const CSocket&) = delete;
+	CSocket& operator=(const CSocket&) = delete;
 };
 
 

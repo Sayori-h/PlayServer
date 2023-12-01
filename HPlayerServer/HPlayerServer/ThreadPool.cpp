@@ -27,7 +27,7 @@ int CThreadPool::Start(unsigned count)
 	int ret = 0;
 	if (m_server != nullptr)return -1;//已经初始化
 	if (m_path.empty())return -2;//构造函数失败
-	m_server = new CLocalSocket();
+	m_server = new CSocket();
 	if (m_server == nullptr)return -3;//内存分配失败
 	ret = m_server->Init(CSockParam(m_path, SOCK_ISSERVER));
 	if (ret != 0)return -4;

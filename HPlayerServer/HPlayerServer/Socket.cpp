@@ -59,30 +59,39 @@ CSocketBase::~CSocketBase()
 	Close();
 }
 
-void CSocketBase::Close()
+int CSocketBase::Close()
 {
 	m_status = 3;
 	if (m_socket != -1) {
-		if(m_param.attr&SOCK_ISSERVER)
+		if((m_param.attr&SOCK_ISSERVER)&&//服务器
+			((m_param.attr&SOCK_ISIP)==0))//非IP
 		unlink(m_param.ip);
 		int fd = m_socket;
 		m_socket = -1;
 		close(fd);
 	}
+	return 0;
 }
 
-int CLocalSocket::Init(const CSockParam& param)
+int CSocket::Init(const CSockParam& param)
 {
 	if (m_status != 0)return -1;
 	m_param = param;
 	int type = m_param.attr & SOCK_ISUDP ? SOCK_DGRAM : SOCK_STREAM;
-	if (m_socket == -1)
-		m_socket = socket(PF_LOCAL, type, 0);
+	if (m_socket == -1) {
+		if (param.attr & SOCK_ISIP)
+			m_socket = socket(PF_INET, type, 0);
+		else
+			m_socket = socket(PF_LOCAL, type, 0);
+	}
 	else m_status = 2;//accept来的套接字，已经处于连接状态
 	if (m_socket == -1)return -2;
 	int ret = 0;
 	if (m_param.attr & SOCK_ISSERVER) {
-		ret = bind(m_socket, m_param.addrun(), sizeof(sockaddr_un));
+		if(param.attr&SOCK_ISIP)
+			ret = bind(m_socket, m_param.addrin(), sizeof(sockaddr_in));
+		else
+			ret = bind(m_socket, m_param.addrun(), sizeof(sockaddr_un));
 		if (ret == -1)return -3;
 		ret = listen(m_socket, 32);
 		if (ret == -1)return -4;
@@ -98,17 +107,26 @@ int CLocalSocket::Init(const CSockParam& param)
 	return 0;
 }
 
-int CLocalSocket::Link(CSocketBase** pCliSocket)
+int CSocket::Link(CSocketBase** pCliSocket)
 {
 	if (m_socket == -1 || (m_status < 1))return -1;
 	int ret = 0;
 	if (m_param.attr & SOCK_ISSERVER) {
 		if (pCliSocket == nullptr)return - 2;
 		CSockParam param;
-		socklen_t len = sizeof(sockaddr_un);
-		int fd = accept(m_socket, param.addrun(), &len);
+		int fd = -1;
+		socklen_t len = 0;
+		if (m_param.attr & SOCK_ISIP) {
+			param.attr |= SOCK_ISIP;
+			len = sizeof(sockaddr_in);
+			fd = accept(m_socket, param.addrin(), &len);
+		}
+		else {
+			len = sizeof(sockaddr_un);
+			fd = accept(m_socket, param.addrun(), &len);
+		}		
 		if (fd == -1)return -3;
-		(*pCliSocket) = new CLocalSocket(fd);
+		(*pCliSocket) = new CSocket(fd);
 		if (*pCliSocket == nullptr)return -4;
 		ret=(*pCliSocket)->Init(param);
 		if (ret != 0) {
@@ -118,15 +136,18 @@ int CLocalSocket::Link(CSocketBase** pCliSocket)
 		}
 	}
 	else {
-		//Init给的m_param
-		ret = connect(m_socket, m_param.addrun(), sizeof(sockaddr_un));
+		if (m_param.attr & SOCK_ISIP)
+			//Init给的m_param
+			ret = connect(m_socket, m_param.addrin(), sizeof(sockaddr_in));
+		else
+			ret = connect(m_socket, m_param.addrun(), sizeof(sockaddr_un));
 		if (ret != 0)return -6;
 	}
 	m_status = 2;
 	return 0;
 }
 
-int CLocalSocket::Send(const Buffer& buffer)
+int CSocket::Send(const Buffer& buffer)
 {
 	if (m_status < 2 || (m_socket == -1))return -1;
 	ssize_t index = 0;
@@ -141,7 +162,7 @@ int CLocalSocket::Send(const Buffer& buffer)
 	return 0;
 }
 
-int CLocalSocket::Recv(Buffer& buffer)
+int CSocket::Recv(Buffer& buffer)
 {
 #ifdef _DEBUG
 	{
@@ -170,19 +191,18 @@ int CLocalSocket::Recv(Buffer& buffer)
 	return -3;//连接关闭
 }
 
-void CLocalSocket::Close()
+int CSocket::Close()
 {
-	CSocketBase::Close();
-	return;
+	return CSocketBase::Close();	
 }
 
-CLocalSocket::CLocalSocket(int sock)
+CSocket::CSocket(int sock)
 	:CSocketBase()
 {
 	m_socket = sock;
 }
 
-CLocalSocket::~CLocalSocket()
+CSocket::~CSocket()
 {
 	Close();
 }

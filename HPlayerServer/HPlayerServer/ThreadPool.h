@@ -16,7 +16,7 @@ public:
 	void Close();
 	template<typename _FUNCTION_, typename..._ARGS_>
 	int AddTask(_FUNCTION_ func, _ARGS_... args) {
-		static thread_local CLocalSocket client;
+		static thread_local CSocket client;
 		int ret = 0;
 		if (client == -1) {
 			ret = client.Init(CSockParam(m_path, 0));
