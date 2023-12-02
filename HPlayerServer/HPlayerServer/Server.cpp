@@ -16,13 +16,13 @@ int CServer::Init(CBusiness* business, const Buffer& ip, short port)
 	int ret = 0;
 	if (business == nullptr)return -1;
 	//将业务逻辑的入口函数和对象关联到 CServer 的 m_process 成员中
-	ret=m_process.SetEntryFunction(&CBusiness::BusinessProcess, m_business);
+	ret=m_process.SetEntryFunction(&CBusiness::BusinessProcess, m_business,&m_process);
 	if (ret != 0)return -2;
 	ret=m_process.CreateSubProcess();
 	if (ret != 0)return -3;
-	ret=m_pool.Start(4);
+	ret=m_pool.Start(2);
 	if (ret != 0)return -4;
-	ret=m_epoll.Create(4);
+	ret=m_epoll.Create(2);
 	if (ret != 0)return -5;
 	m_server = new CSocket();
 	if (m_server == nullptr)return -6;
@@ -87,4 +87,9 @@ int CServer::ThreadFunc()
 		}
 	}
 	return 0;
+}
+
+CBusiness::CBusiness()
+	:m_connected(nullptr),m_recvdone(nullptr)
+{
 }

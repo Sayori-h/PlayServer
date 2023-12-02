@@ -1,7 +1,4 @@
-﻿#include <cerrno>
-#include "Process.h"
-#include "Logger.h"
-#include "ThreadPool.h"
+﻿#include "HPlayServer.h"
 
 int CreateLogServer(CProcess* proc) {
     CLoggerServer server;
@@ -98,8 +95,7 @@ int LogTest()
     return 0;
 }
 
-int main()
-{
+int OldTest() {
     //CProcess::SwitchDeamon();
     CProcess proclog, proclients;
 #ifdef _DEBUG
@@ -151,7 +147,7 @@ int main()
         {
             std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
             memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> pid=%d\n", 
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> pid=%d\n",
                 __FILE__, __LINE__, __FUNCTION__, getpid());
             fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
             fflush(pFile);
@@ -163,19 +159,19 @@ int main()
     {
         std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
         memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-        snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> pid=%d\n", 
+        snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> pid=%d\n",
             __FILE__, __LINE__, __FUNCTION__, getpid());
         fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
         fflush(pFile);
     }
 #endif // DEBUG  
     sleep(1);
-    int fd = open("./testFD.txt", O_RDWR | O_CREAT|O_APPEND);
+    int fd = open("./testFD.txt", O_RDWR | O_CREAT | O_APPEND);
 #ifdef _DEBUG
     {
         std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
         memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-        snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> fd=%d\n", 
+        snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> fd=%d\n",
             __FILE__, __LINE__, __FUNCTION__, fd);
         fwrite(szBufInfo, sizeof(char), sizeof(szBufInfo), pFile);
         fflush(pFile);
@@ -188,7 +184,7 @@ int main()
         {
             std::lock_guard<std::mutex> lock(debugMutex); // Lock the mutex
             memset(szBufInfo, 0, sizeof(szBufInfo));  // 清零缓冲区
-            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n", 
+            snprintf(szBufInfo, BUF_SIZE, "%s(%d):<%s> ret=%d\n",
                 __FILE__, __LINE__, __FUNCTION__, ret);
             snprintf(szBufInfo + strlen(szBufInfo), BUF_SIZE - strlen(szBufInfo),
                 "errno:%d msg:%s\n", errno, strerror(errno));
@@ -202,7 +198,7 @@ int main()
     close(fd);
 
     CThreadPool pool;
-    ret=pool.Start(4);
+    ret = pool.Start(4);
     if (ret != 0) {
 #ifdef _DEBUG
         {
@@ -217,7 +213,7 @@ int main()
         }
 #endif // DEBUG  
     }
-    ret=pool.AddTask(LogTest);
+    ret = pool.AddTask(LogTest);
     if (ret != 0) {
 #ifdef _DEBUG
         {
@@ -232,7 +228,7 @@ int main()
         }
 #endif // DEBUG  
     }
-    ret=pool.AddTask(LogTest);
+    ret = pool.AddTask(LogTest);
     if (ret != 0) {
 #ifdef _DEBUG
         {
@@ -247,7 +243,7 @@ int main()
         }
 #endif // DEBUG  
     }
-    ret=pool.AddTask(LogTest);
+    ret = pool.AddTask(LogTest);
     if (ret != 0) {
 #ifdef _DEBUG
         {
@@ -262,7 +258,7 @@ int main()
         }
 #endif // DEBUG  
     }
-    ret=pool.AddTask(LogTest);
+    ret = pool.AddTask(LogTest);
     if (ret != 0) {
 #ifdef _DEBUG
         {
@@ -283,5 +279,22 @@ int main()
     pool.Close();
     proclog.SendFD(-1);
     (void)getchar();
+    return 0;
+}
+
+int main()
+{
+    int ret = 0;
+    CProcess proclog;
+    ret = proclog.SetEntryFunction(CreateLogServer, &proclog);
+    ERR_RETURN(ret, -1);
+    ret = proclog.CreateSubProcess();
+    ERR_RETURN(ret, -2);
+    CHPlayServer business(4);
+    CServer server;
+    ret = server.Init(&business);
+    ERR_RETURN(ret, -3);
+    ret = server.Run();
+    ERR_RETURN(ret, -4);
     return 0;
 }

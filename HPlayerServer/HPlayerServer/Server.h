@@ -8,7 +8,9 @@
 class CBusiness
 {
 public:
-	virtual int BusinessProcess() = 0;
+	CBusiness();
+
+	virtual int BusinessProcess(CProcess* proc) = 0;
 
 	template<typename Function,typename...Args>
 	int setConnected(Function func, Args...args) {
@@ -23,7 +25,7 @@ public:
 		if (m_recvdone == nullptr)return -1;
 		return 0;
 	}
-private:
+protected:
 	CFunction* m_connected;
 	CFunction* m_recvdone;
 };
