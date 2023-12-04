@@ -16,8 +16,10 @@ class CHPlayServer:public CBusiness
 public:
 	CHPlayServer(unsigned count);
 	~CHPlayServer();
+	//业务模块主线程
 	virtual int BusinessProcess(CProcess* proc) override;
 private:
+	//客户端处理线程
 	int ThreadFunc();
 private:
 	CEpoll m_epoll;

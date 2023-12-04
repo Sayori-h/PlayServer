@@ -36,6 +36,12 @@ CSockParam::CSockParam(const Buffer& path, int attr)
 	strcpy(addr_un.sun_path, path);
 }
 
+CSockParam::CSockParam(const sockaddr_in* addrin, int attr)
+{
+	this->attr = attr;
+	memcpy(&addr_in, addrin, sizeof(addr_in));
+}
+
 CSockParam& CSockParam::operator=(const CSockParam& param)
 {
 	if (this != &param) {

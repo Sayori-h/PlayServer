@@ -24,16 +24,19 @@ int CHPlayServer::BusinessProcess(CProcess* proc)
 	ERR_RETURN(ret, -1);
 	ret = m_pool.Start(m_count);
 	ERR_RETURN(ret, -2);
-	for (unsigned i = 0; i < m_pool.Size(); i++) {
+	for (unsigned i = 0; i < m_count; i++) {
 		ret = m_pool.AddTask(&CHPlayServer::ThreadFunc, this);
 		ERR_RETURN(ret, -3);
 	}
 	int sock = 0;
+	sockaddr_in addrin;
 	while (m_epoll != -1) {//检测状态
-		ret = proc->RecvFD(sock);
+		ret = proc->RecvSocket(sock,&addrin);
 		if (ret < 0 || (sock == 0))break;
 		CSocketBase* pClient = new CSocket(sock);
 		if (pClient == nullptr)continue;
+		ret = pClient->Init(CSockParam(&addrin,SOCK_ISIP));
+		WARN_CONTINUE(ret);
 		ret = m_epoll.Add(sock, (EpollData)(void*)pClient);
 		if (m_connected) {
 			(*m_connected)();
@@ -53,7 +56,7 @@ int CHPlayServer::ThreadFunc()
 		if (size > 0) {
 			for (ssize_t i = 0; i < size; i++) {
 				if (events[i].events & EPOLLERR)break;
-				else if (events[i].events & EPOLLIN) {
+				else if (events[i].events & EPOLLIN) {//处理读取事件
 					CSocketBase* pClient = (CSocketBase*)events[i].data.ptr;
 					if (pClient != nullptr) {
 						Buffer data;

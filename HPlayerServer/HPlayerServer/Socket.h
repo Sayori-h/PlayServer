@@ -41,6 +41,8 @@ public:
 	CSockParam(const Buffer& ip, short port, int attr);
 	//本地套接字通信靠路径
 	CSockParam(const Buffer& path, int attr);
+	//客户端地址传递
+	CSockParam(const sockaddr_in* addrin, int attr);
 
 	CSockParam& operator=(const CSockParam& param);
 	sockaddr* addrin() {return (sockaddr*)&addr_in;}
@@ -75,6 +77,8 @@ public:
 	virtual int Close();
 	virtual operator int() { return m_socket; }
 	virtual operator int()const { return m_socket; }
+	virtual operator sockaddr_in* () { return &m_param.addr_in; }
+	virtual operator const sockaddr_in* ()const { return &m_param.addr_in; }
 protected:
 	//套接字描述符，默认是-1
 	int m_socket;

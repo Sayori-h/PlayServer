@@ -75,7 +75,7 @@ int CServer::ThreadFunc()
 						CSocketBase* pClient = nullptr;
 						ret = m_server->Link(&pClient);
 						if (ret != 0)continue;
-						ret = m_process.SendFD(*pClient);
+						ret = m_process.SendSocket(*pClient,*pClient);
 						delete pClient;
 						if (ret != 0) {
 							TRACE_ERROR("send client %d failed!", (int)*pClient);
@@ -91,5 +91,4 @@ int CServer::ThreadFunc()
 
 CBusiness::CBusiness()
 	:m_connected(nullptr),m_recvdone(nullptr)
-{
-}
+{}
