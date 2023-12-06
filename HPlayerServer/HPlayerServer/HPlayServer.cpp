@@ -19,14 +19,19 @@ CHPlayServer::~CHPlayServer()
 
 int CHPlayServer::BusinessProcess(CProcess* proc)
 {
+	using namespace std::placeholders;
 	int ret = 0;
-	ret = m_epoll.Create(m_count);
+	ret = setConnected(&CHPlayServer::Connected, this, _1);
 	ERR_RETURN(ret, -1);
-	ret = m_pool.Start(m_count);
+	ret = setRecvDone(&CHPlayServer::Received, this, _1, _2);
 	ERR_RETURN(ret, -2);
+	ret = m_epoll.Create(m_count);
+	ERR_RETURN(ret, -3);
+	ret = m_pool.Start(m_count);
+	ERR_RETURN(ret, -4);
 	for (unsigned i = 0; i < m_count; i++) {
 		ret = m_pool.AddTask(&CHPlayServer::ThreadFunc, this);
-		ERR_RETURN(ret, -3);
+		ERR_RETURN(ret, -5);
 	}
 	int sock = 0;
 	sockaddr_in addrin;
@@ -39,7 +44,7 @@ int CHPlayServer::BusinessProcess(CProcess* proc)
 		WARN_CONTINUE(ret);
 		ret = m_epoll.Add(sock, (EpollData)(void*)pClient);
 		if (m_connected) {
-			(*m_connected)();
+			(*m_connected)(pClient);
 		}
 		WARN_CONTINUE(ret);
 	}
@@ -63,11 +68,21 @@ int CHPlayServer::ThreadFunc()
 						ret = pClient->Recv(data);
 						WARN_CONTINUE(ret);
 						if (m_recvdone != nullptr)
-							(*m_recvdone)();
+							(*m_recvdone)(pClient,data);
 					}					
 				}
 			}
 		}
 	}
+	return 0;
+}
+
+int CHPlayServer::Connected(CSocketBase* pClient)
+{
+	return 0;
+}
+
+int CHPlayServer::Received(CSocketBase* pClient, const Buffer& data)
+{
 	return 0;
 }

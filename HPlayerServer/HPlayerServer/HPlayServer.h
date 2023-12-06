@@ -21,6 +21,8 @@ public:
 private:
 	//客户端处理线程
 	int ThreadFunc();
+	int Connected(CSocketBase* pClient);
+	int Received(CSocketBase* pClient, const Buffer& data);
 private:
 	CEpoll m_epoll;
 	std::map<int, CSocketBase*>m_mapClients;

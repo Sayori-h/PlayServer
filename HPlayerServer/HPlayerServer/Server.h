@@ -5,6 +5,38 @@
 #include "Process.h"
 #include "Logger.h"
 
+class CConnectedFunction {
+public:
+	template<typename Function, typename...Args>
+	CConnectedFunction(Function func, Args...args) {
+		m_binder = std::bind(func, args...);
+	}
+
+	~CConnectedFunction() {}
+
+	int operator()(CSocketBase* pClient) {
+		return m_binder(pClient);
+	}
+private:
+	std::function<int(CSocketBase*)> m_binder;
+};
+
+class CReceivedFunction {
+public:
+	template<typename Function, typename...Args>
+	CReceivedFunction(Function func, Args...args) {
+		m_binder = std::bind(func, args...);
+	}
+
+	~CReceivedFunction() {}
+
+	int operator()(CSocketBase* pClient, const Buffer& data) {
+		return m_binder(pClient,data);
+	}
+private:
+	std::function<int(CSocketBase*, const Buffer&)> m_binder;
+};
+
 class CBusiness
 {
 public:
@@ -14,20 +46,20 @@ public:
 
 	template<typename Function,typename...Args>
 	int setConnected(Function func, Args...args) {
-		m_connected = new CFunction(func, args...);
+		m_connected = new CConnectedFunction(func, args...);
 		if (m_connected == nullptr)return -1;
 		return 0;
 	}
 
 	template<typename Function,typename...Args>
 	int setRecvDone(Function func, Args...args) {
-		m_recvdone = new CFunction(func, args...);
+		m_recvdone = new CReceivedFunction(func, args...);
 		if (m_recvdone == nullptr)return -1;
 		return 0;
 	}
 protected:
-	CFunction* m_connected;
-	CFunction* m_recvdone;
+	CConnectedFunction* m_connected;
+	CReceivedFunction* m_recvdone;
 };
 
 class CServer
