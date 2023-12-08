@@ -78,6 +78,8 @@
     <ClCompile Include="CEpoll.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="HPlayServer.cpp" />
+    <ClCompile Include="HttpParser.cpp" />
+    <ClCompile Include="http_parser.c" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Server.cpp" />
@@ -90,6 +92,8 @@
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="HPlayServer.h" />
+    <ClInclude Include="HttpParser.h" />
+    <ClInclude Include="http_parser.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Server.h" />

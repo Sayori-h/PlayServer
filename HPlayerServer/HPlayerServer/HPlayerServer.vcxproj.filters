@@ -36,6 +36,12 @@
     <ClCompile Include="HPlayServer.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="http_parser.c">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpParser.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -66,6 +72,12 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="HPlayServer.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="http_parser.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpParser.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
