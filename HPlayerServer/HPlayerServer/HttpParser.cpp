@@ -45,14 +45,17 @@ CHttpParser& CHttpParser::operator=(const CHttpParser& http)
 		m_complete = http.m_complete;
 		m_lastField = http.m_lastField;
 	}
+	return *this;
 }
 
 size_t CHttpParser::ExecParser(const Buffer& data)
 {
 	m_complete = false;
 	size_t ret = http_parser_execute(&m_parser, &m_settings, data, data.size());
-	if (m_complete == false)
+	if (m_complete == false) {
 		m_parser.http_errno = 0x7F;
+		return 0;
+	}
 	return ret;
 }
 
@@ -163,6 +166,7 @@ int CHttpParser::OnHeadersComplete()
 int CHttpParser::OnBody(const char* at, size_t length)
 {
 	m_body = Buffer(at, length);
+	return 0;
 }
 
 int CHttpParser::OnMessageComplete()
@@ -198,10 +202,10 @@ int UrlParser::ExecParser()
 	}
 	Buffer value(pos, target);//www.luffycity.com:80
 	if (value.empty())return -3;
-	target = strchr(pos, ':');
+	target = strchr(value, ':');
 	if (target != nullptr) {
-		m_host = Buffer(pos, target);//www.luffycity.com
-		m_port = atoi(Buffer(target + 1, pos + value.size()));
+		m_host = Buffer(value, target);//www.luffycity.com
+		m_port = atoi(Buffer(target + 1, (char*)value + value.size()));
 	}
 	else m_host = value;
 	//Ω‚ŒˆURI   /news/index.html?id=250&page=1
@@ -232,6 +236,7 @@ int UrlParser::ExecParser()
 			}
 		} while (target!=nullptr);
 	}
+	return 0;
 }
 
 Buffer UrlParser::operator[](const Buffer& name) const

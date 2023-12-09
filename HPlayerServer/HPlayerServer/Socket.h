@@ -22,7 +22,7 @@ public:
 	}
 	//不包含end
 	Buffer(const char* begin, const char* end):std::string() {
-		int len = end - begin;
+		long int len = end - begin;
 		if (len > 0) {
 			resize(len);
 			memcpy((char*)c_str(), begin, len);
