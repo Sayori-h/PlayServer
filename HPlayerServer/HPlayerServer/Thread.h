@@ -6,7 +6,7 @@
 #include <map>
 #include <errno.h>
 #include "Function.h"
-#include "Debug.h"
+#include "Public.h"
 
 class CThread
 {

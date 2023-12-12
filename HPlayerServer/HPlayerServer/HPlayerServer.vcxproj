@@ -76,7 +76,8 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="CEpoll.cpp" />
-    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="DatabaseHelper.cpp" />
+    <ClCompile Include="Public.cpp" />
     <ClCompile Include="HPlayServer.cpp" />
     <ClCompile Include="HttpParser.cpp" />
     <ClCompile Include="http_parser.c" />
@@ -84,12 +85,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="Socket.cpp" />
+    <ClCompile Include="Sqlite3Client.cpp" />
+    <ClCompile Include="sqlite3\sqlite3.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Wno-misleading-indentation %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CEpoll.h" />
-    <ClInclude Include="Debug.h" />
+    <ClInclude Include="DatabaseHelper.h" />
+    <ClInclude Include="Public.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="HPlayServer.h" />
     <ClInclude Include="HttpParser.h" />
@@ -98,6 +104,9 @@
     <ClInclude Include="Process.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Socket.h" />
+    <ClInclude Include="Sqlite3Client.h" />
+    <ClInclude Include="sqlite3\sqlite3.h" />
+    <ClInclude Include="sqlite3\sqlite3ext.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="ThreadPool.h" />
   </ItemGroup>

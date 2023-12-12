@@ -7,6 +7,9 @@
     <Filter Include="source">
       <UniqueIdentifier>{52812ae3-f008-40d4-9493-e51cab0b2de0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sqlite3">
+      <UniqueIdentifier>{abe908aa-aac7-4d3a-b052-004932ff93d7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,7 +24,7 @@
     <ClCompile Include="Thread.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="Debug.cpp">
+    <ClCompile Include="Public.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
@@ -42,6 +45,15 @@
     <ClCompile Include="HttpParser.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="DatabaseHelper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3\sqlite3.c">
+      <Filter>sqlite3</Filter>
+    </ClCompile>
+    <ClCompile Include="Sqlite3Client.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -59,7 +71,7 @@
     <ClInclude Include="Thread.h">
       <Filter>header</Filter>
     </ClInclude>
-    <ClInclude Include="Debug.h">
+    <ClInclude Include="Public.h">
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
@@ -78,6 +90,18 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="HttpParser.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="DatabaseHelper.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\sqlite3.h">
+      <Filter>sqlite3</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3\sqlite3ext.h">
+      <Filter>sqlite3</Filter>
+    </ClInclude>
+    <ClInclude Include="Sqlite3Client.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
