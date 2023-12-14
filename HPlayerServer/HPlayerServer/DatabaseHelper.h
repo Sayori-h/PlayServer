@@ -59,9 +59,9 @@ public:
 	//增删改查
 	//TODO:参数进行优化
 	virtual Buffer Insert(const _Table_& values) = 0;
-	virtual Buffer Delete() = 0;
+	virtual Buffer Delete(const _Table_& values) = 0;
 	//TODO:参数进行优化
-	virtual Buffer Modify() = 0;
+	virtual Buffer Modify(const _Table_& values) = 0;
 	virtual Buffer Query() = 0;
 	//创建一个基于表的对象
 	/*传一个对象进去，根据传的对象创建一个副本，这个东西主要给查询用的，exec中会传一个table进去，
@@ -82,6 +82,12 @@ public:
 	std::vector<PField> VecField;
 	//列的定义映射表 方便查询，直接通过find去查
 	std::map<Buffer, PField> MapFields;
+};
+
+enum {
+	SQL_INSERT = 1,//插入的列
+	SQL_MODIFY = 2,//修改的列
+	SQL_CONDITION = 4//查询条件列
 };
 
 class _Field_
@@ -112,4 +118,6 @@ public:
 	Buffer Default;
 	//约束条件
 	Buffer Check;
+	//操作条件
+	unsigned Condition;
 };
