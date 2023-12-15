@@ -49,6 +49,7 @@ private:
 
 class _sqlite3_table_ : public _Table_	
 {
+public:
 	_sqlite3_table_() :_Table_() {}
 	_sqlite3_table_(const _sqlite3_table_& table);
 	virtual ~_sqlite3_table_() {}
@@ -66,13 +67,15 @@ class _sqlite3_table_ : public _Table_
 	//创建一个基于表的对象
 	virtual PTable Copy()const override;
 	virtual void ClearFieldUsed();
-public:
 	//获取表的全名
 	virtual operator const Buffer() const override;
 };
 
 class _sqlite3_field_ :public _Field_
 {
+public:
+	_sqlite3_field_();
+	virtual ~_sqlite3_field_(){}
 	virtual Buffer Create() override;
 	//查到的结果是字符串，把它转成对应的值
 	virtual void LoadFromStr(const Buffer& str) override;
@@ -82,5 +85,14 @@ class _sqlite3_field_ :public _Field_
 	virtual Buffer toSqlStr() const override;
 	//列的全名
 	virtual operator const Buffer() const override;
+private:
+	Buffer Str2Hex(const Buffer& data)const;
+	struct {
+		bool Bool;
+		int Integer;
+		double Double;
+		Buffer String;
+	}Value;
+	int nType;
 };
 

@@ -90,6 +90,26 @@ enum {
 	SQL_CONDITION = 4//查询条件列
 };
 
+enum {
+	NOT_NULL=1,
+	DEFAULT=2,
+	UNIQUE=4,
+	PRIMARY_KEY=8,
+	CHECK=16,
+	AUTOINCREMENT=32
+};
+
+enum SqlType{
+	TYPE_NULL = 0,
+	TYPE_BOOL = 1,
+	TYPE_INT = 2,
+	TYPE_DATETIME = 4,
+	TYPE_REAL = 8,
+	TYPE_VARCHAR = 16,
+	TYPE_TEXT = 32,
+	TYPE_BLOB = 64
+};
+
 class _Field_
 {
 public:
