@@ -19,8 +19,8 @@ int CSqlite3Client::Exec(const Buffer& sql)
     if (m_db == nullptr)return -1;
     int ret = sqlite3_exec(m_db, sql, nullptr, this, nullptr);
     if (ret != SQLITE_OK) {
-        TRACE_ERROR("sql={%s}", sql);
-        TRACE_ERROR("exec failed:%d [%s]\n", ret, sqlite3_errmsg(m_db));
+        printf("sql={%s}\n", (char*)sql);
+        printf("exec failed:%d [%s]\n", ret, sqlite3_errmsg(m_db));
         return -2;
     }
     return 0;
@@ -33,8 +33,8 @@ int CSqlite3Client::Exec(const Buffer& sql, std::list<PTable>& result, const _Ta
     ExecParam param(this, result, table);
     int ret = sqlite3_exec(m_db, sql, &CSqlite3Client::ExecCallback, (void*)&param, &errmsg);
     if (ret != SQLITE_OK) {
-        TRACE_ERROR("sql={%s}", sql);
-        TRACE_ERROR("exec failed:%d [%s]\n", ret, errmsg);
+        printf("sql={%s}\n", (char*)sql);
+        printf("exec failed:%d [%s]\n", ret, errmsg);
         if (errmsg)sqlite3_free(errmsg);
         return -2;
     }
@@ -94,7 +94,7 @@ bool CSqlite3Client::IsConnected()
     return m_db!=nullptr;
 }
 
-int CSqlite3Client::ExecCallback(void* arg, int count, char** names, char** values)
+int CSqlite3Client::ExecCallback(void* arg, int count, char** values, char** names)
 {
     ExecParam* param = (ExecParam*)arg;
     int res = param->m_obj->ExecCallback(param->m_result, 
@@ -107,14 +107,14 @@ int CSqlite3Client::ExecCallback(std::list<PTable>& result, const _Table_& table
 {
     PTable pTable = table.Copy();
     if (pTable == nullptr) {
-        TRACE_ERROR("table %s error!", (const char*)(Buffer)table);
+        printf("table %s error!\n", (const char*)(Buffer)table);
         return -1;
     }
     for (int i = 0; i < count; i++) {
         Buffer name = names[i];
         auto it = pTable->MapFields.find(name);
         if (it == pTable->MapFields.end()) {
-            TRACE_ERROR("table %s error!", (const char*)(Buffer)table);
+            printf("table %s error!\n", (const char*)(Buffer)table);
             return -2;
         }
         if (values[i] != nullptr)
@@ -138,18 +138,18 @@ _sqlite3_table_::_sqlite3_table_(const _sqlite3_table_& table)
     }
 }
 
-Buffer _sqlite3_table_::Create()
+Buffer _sqlite3_table_::TCreate()
 {
     //CREATE TABLE IF NOT EXISTS 表全名 (列定义,……);
     //表全名 = 数据库.表名
-    Buffer sql = "CREATE TABLE IF NOT EXISTS" + (Buffer)*this + "(";
+    Buffer sql = "CREATE TABLE IF NOT EXISTS " + (Buffer)*this + "(\r\n";
     for (size_t i = 0; i < VecField.size(); i++) {
         if (i > 0)sql += ",";
-        sql += VecField[i]->Create();
+        sql += VecField[i]->FCreate();
     }
     sql += ");";
     TRACE_INFO("sql=%s", (char*)sql);
-    return Buffer();
+    return sql;
 }
 
 Buffer _sqlite3_table_::Drop()
@@ -165,20 +165,20 @@ Buffer _sqlite3_table_::Insert(const _Table_& values)
     //VALUES(value1, value2, value3, ...,valueN);
     Buffer sql = "INSERT INTO " + (Buffer)*this + " (";
     bool isfirst = true;
-    for (size_t i = 0; i < VecField.size(); i++) {
-        if (VecField[i]->Condition & SQL_INSERT) {
+    for (size_t i = 0; i < values.VecField.size(); i++) {
+        if (values.VecField[i]->Condition & SQL_INSERT) {
             if (!isfirst)sql += ',';
             else isfirst = false;
-            sql += (Buffer)*VecField[i];
+            sql += (Buffer)*values.VecField[i];
         }
     }
-    sql += ") VALUES(";
+    sql += ") VALUES (";
     isfirst = true;
-    for (size_t i = 0; i < VecField.size(); i++) {
-        if (VecField[i]->Condition & SQL_INSERT) {
+    for (size_t i = 0; i < values.VecField.size(); i++) {
+        if (values.VecField[i]->Condition & SQL_INSERT) {
             if (!isfirst)sql += ',';
             else isfirst = false;
-            sql += VecField[i]->toSqlStr();
+            sql += values.VecField[i]->toSqlStr();
         }
     }
     sql += " );";
@@ -192,11 +192,11 @@ Buffer _sqlite3_table_::Delete(const _Table_& values)
     Buffer sql = "DELETE FROM " + (Buffer)*this + " ";
     Buffer Where = "";
     bool isfirst = true;
-    for (size_t i = 0; i < VecField.size(); i++) {
-        if (VecField[i]->Condition & SQL_CONDITION) {
+    for (size_t i = 0; i < values.VecField.size(); i++) {
+        if (values.VecField[i]->Condition & SQL_CONDITION) {
             if (!isfirst)Where += " AND ";
             else isfirst = false;
-            Where += (Buffer)*VecField[i] + "=" + VecField[i]->toSqlStr();
+            Where += (Buffer)*values.VecField[i] + "=" + values.VecField[i]->toSqlStr();
         }
     }
     if (Where.size() > 0) {
@@ -210,21 +210,21 @@ Buffer _sqlite3_table_::Delete(const _Table_& values)
 Buffer _sqlite3_table_::Modify(const _Table_& values)
 {
     //UPDATE table_name SET column1 = value1, column2 = value2...., columnN = valueN WHERE condition;
-    Buffer sql = "UPDATE " + (Buffer)*this + " (";
+    Buffer sql = "UPDATE " + (Buffer)*this + " SET ";
     bool isfirst = true;
-    for (size_t i = 0; i < VecField.size(); i++) {
-        if (VecField[i]->Condition & SQL_MODIFY) {
+    for (size_t i = 0; i < values.VecField.size(); i++) {
+        if (values.VecField[i]->Condition & SQL_MODIFY) {
             if (!isfirst)sql += ",";
             else isfirst = false;
-            sql += (Buffer)*VecField[i] + "=" + VecField[i]->toSqlStr();
+            sql += (Buffer)*values.VecField[i] + "=" + values.VecField[i]->toSqlStr();
         }       
     }
     Buffer Where = "";
-    for (size_t i = 0; i < VecField.size(); i++) {
-        if (VecField[i]->Condition & SQL_CONDITION) {
+    for (size_t i = 0; i < values.VecField.size(); i++) {
+        if (values.VecField[i]->Condition & SQL_CONDITION) {
             if (!isfirst)Where += " AND ";
             else isfirst = false;
-            Where += (Buffer)*VecField[i] + "=" + VecField[i]->toSqlStr();
+            Where += (Buffer)*values.VecField[i] + "=" + values.VecField[i]->toSqlStr();
         }
     }
     if (Where.size() > 0)sql += " WHERE " + Where;
@@ -273,12 +273,31 @@ _sqlite3_field_::_sqlite3_field_():_Field_()
     Value.Double = 0.0;
 }
 
-Buffer _sqlite3_field_::Create()
+_sqlite3_field_::_sqlite3_field_(int ntype, const Buffer& name, unsigned attr, 
+    const Buffer& type, const Buffer& size, const Buffer& default_, const Buffer& check)
+{
+    nType = ntype;
+    Name = name;
+    Attr = attr;
+    Type = type;
+    Size = size;
+    Default = default_;
+    Check = check;
+}
+
+_sqlite3_field_::_sqlite3_field_(const _sqlite3_field_& field)
+    :_Field_(field)
+{
+    nType = field.nType;
+    Value = field.Value;
+}
+
+Buffer _sqlite3_field_::FCreate()
 {
     //"名称" 类型 属性
     Buffer sql = '"' + Name + "\" " + Type + " ";
     if (Attr & NOT_NULL) {
-        sql += " NOT_NULL ";
+        sql += " NOT NULL ";
     }
     if (Attr & DEFAULT) {
         sql += " DEFAULT " + Default + " ";
@@ -287,7 +306,13 @@ Buffer _sqlite3_field_::Create()
         sql += " UNIQUE ";
     }
     if (Attr & PRIMARY_KEY) {
-        sql+=" PRIMARY_KEY ";
+        sql+=" PRIMARY KEY ";
+    }
+    if (Attr & CHECK) {
+        sql += " CHECK( " + Check + ") ";
+    }
+    if (Attr & AUTOINCREMENT) {
+        sql += " AUTOINCREMENT ";
     }
     return sql;
 }

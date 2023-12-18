@@ -53,7 +53,7 @@ public:
 	//返回创建表的SQL语句
 	//并不是说直接创建表，创建表一定要在数据库客户端CDatabaseClient里去做
 	//要想对数据进行操作，只能通过创建语句，通过CDatabaseClient::exec去执行,最后得到一个结果
-	virtual Buffer Create() = 0;
+	virtual Buffer TCreate() = 0;
 	//删除表
 	virtual Buffer Drop() = 0;
 	//增删改查
@@ -118,7 +118,7 @@ public:
 	virtual _Field_& operator=(const _Field_& field);
 	virtual ~_Field_(){}
 
-	virtual Buffer Create() = 0;
+	virtual Buffer FCreate() = 0;
 	//查到的结果是字符串，把它转成对应的值
 	virtual void LoadFromStr(const Buffer& str) = 0;
 	//where 语句使用的  生成一个=的表达式
@@ -141,3 +141,13 @@ public:
 	//操作条件
 	unsigned Condition;
 };
+
+#define DECLARE_TABLE_CLASS(name, base) class name:public base { \
+public: \
+virtual PTable Copy() const {return std::make_shared<name>(*this);} \
+name():base(){Name=#name;
+
+#define DECLARE_FIELD(ntype,name,attr,type,size,default_,check) \
+{PField pField = std::make_shared<_sqlite3_field_>(ntype, #name, attr, type, size, default_, check);VecField.push_back(pField);MapFields[#name] = pField; }
+
+#define DECLARE_TABLE_CLASS_END() }};

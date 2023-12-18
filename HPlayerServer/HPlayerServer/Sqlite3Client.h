@@ -54,7 +54,7 @@ public:
 	_sqlite3_table_(const _sqlite3_table_& table);
 	virtual ~_sqlite3_table_() {}
 	//返回创建的SQL语句
-	virtual Buffer Create() override;
+	virtual Buffer TCreate() override;
 	//删除表
 	virtual Buffer Drop() override;
 	//增删改查
@@ -76,7 +76,11 @@ class _sqlite3_field_ :public _Field_
 public:
 	_sqlite3_field_();
 	virtual ~_sqlite3_field_(){}
-	virtual Buffer Create() override;
+	_sqlite3_field_(int ntype,const Buffer& name,unsigned attr,
+		const Buffer& type,const Buffer& size,
+		const Buffer& default_,const Buffer& check);
+	_sqlite3_field_(const _sqlite3_field_& field);
+	virtual Buffer FCreate() override;
 	//查到的结果是字符串，把它转成对应的值
 	virtual void LoadFromStr(const Buffer& str) override;
 	//where 语句使用的  生成一个=的表达式
