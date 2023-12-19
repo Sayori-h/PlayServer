@@ -54,6 +54,9 @@
     <ClCompile Include="Sqlite3Client.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="MysqlClient.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -102,6 +105,9 @@
       <Filter>sqlite3</Filter>
     </ClInclude>
     <ClInclude Include="Sqlite3Client.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="MysqlClient.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>

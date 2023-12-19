@@ -77,6 +77,7 @@
   <ItemGroup>
     <ClCompile Include="CEpoll.cpp" />
     <ClCompile Include="DatabaseHelper.cpp" />
+    <ClCompile Include="MysqlClient.cpp" />
     <ClCompile Include="Public.cpp" />
     <ClCompile Include="HPlayServer.cpp" />
     <ClCompile Include="HttpParser.cpp" />
@@ -95,6 +96,7 @@
   <ItemGroup>
     <ClInclude Include="CEpoll.h" />
     <ClInclude Include="DatabaseHelper.h" />
+    <ClInclude Include="MysqlClient.h" />
     <ClInclude Include="Public.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="HPlayServer.h" />
@@ -118,7 +120,7 @@
       <AdditionalOptions>-Wno-conversion %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <LibraryDependencies>pthread;m;</LibraryDependencies>
+      <LibraryDependencies>pthread;m;mysqlclient;</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

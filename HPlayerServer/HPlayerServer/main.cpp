@@ -397,7 +397,16 @@ DECLARE_TABLE_CLASS_END()
 //    }
 //};
 
-void Sql_test() {
+#include "MysqlClient.h"
+DECLARE_TABLE_CLASS(user_test_mysql, _mysql_table_)
+DECLARE_FIELD(TYPE_INT, user_id, NOT_NULL | PRIMARY_KEY | AUTOINCREMENT, "INTEGER", "", "", "")
+DECLARE_FIELD(TYPE_VARCHAR, user_qq, NOT_NULL, "VARCHAR", "(15)", "", "")
+DECLARE_FIELD(TYPE_VARCHAR, user_phone, NOT_NULL|DEFAULT, "VARCHAR", "(12)", "18888888888", "")
+DECLARE_FIELD(TYPE_TEXT, user_name, 0, "TEXT", "", "", "")
+DECLARE_TABLE_CLASS_END()
+
+
+void Sqlite3_test() {
     user_test test, value;
     printf("creat:%s\n", (char*)test.TCreate());
     printf("Delete:%s\n", (char*)test.Delete(test));
@@ -438,8 +447,50 @@ void Sql_test() {
     printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 }
 
+void mysql_test() {
+    user_test_mysql test, value;
+    printf("creat:%s\n", (char*)test.TCreate());
+    printf("Delete:%s\n", (char*)test.Delete(test));
+    value.MapFields["user_qq"]->LoadFromStr("3186385448");
+    value.MapFields["user_qq"]->Condition = SQL_INSERT;
+    printf("Insert:%s\n", (char*)test.Insert(value));
+    value.MapFields["user_qq"]->LoadFromStr("123456789");
+    value.MapFields["user_qq"]->Condition = SQL_MODIFY;
+    printf("Modify:%s\n", (char*)test.Modify(value));
+    printf("Query:%s\n", (char*)test.Query());
+    printf("Drop:%s\n", (char*)test.Drop());
+    getchar();
+
+    CDatabaseClient* pClient = new CSqlite3Client();
+    std::map<Buffer, Buffer> args;
+    args["host"] = "test.db";
+    int ret = pClient->Connect(args);
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    ret = pClient->Exec(test.TCreate());
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    ret = pClient->Exec(test.Delete(value));
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    value.MapFields["user_qq"]->LoadFromStr("3186385448");
+    value.MapFields["user_qq"]->Condition = SQL_INSERT;
+    ret = pClient->Exec(test.Insert(value));
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    value.MapFields["user_qq"]->LoadFromStr("123456789");
+    value.MapFields["user_qq"]->Condition = SQL_MODIFY;
+    ret = pClient->Exec(test.Modify(value));
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+
+    std::list<PTable> result;
+    ret = pClient->Exec(test.Query(), result, test);
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    ret = pClient->Exec(test.Drop());
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+    ret = pClient->Close();
+    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+}
+
 int main() {
     //http_test();
-    Sql_test();
+    //Sqlite3_test();
+    mysql_test();
     return 0;
 }

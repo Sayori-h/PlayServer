@@ -161,8 +161,8 @@ Buffer _sqlite3_table_::Drop()
 
 Buffer _sqlite3_table_::Insert(const _Table_& values)
 {
-    //INSERT INTO TABLE_NAME (column1, column2, column3,...,columnN)
-    //VALUES(value1, value2, value3, ...,valueN);
+    //INSERT INTO TABLE_NAME (column1,column2,column3,...,columnN)
+    //VALUES(value1,value2,value3, ...,valueN);
     Buffer sql = "INSERT INTO " + (Buffer)*this + " (";
     bool isfirst = true;
     for (size_t i = 0; i < values.VecField.size(); i++) {
