@@ -399,10 +399,10 @@ DECLARE_TABLE_CLASS_END()
 
 #include "MysqlClient.h"
 DECLARE_TABLE_CLASS(user_test_mysql, _mysql_table_)
-DECLARE_FIELD(TYPE_INT, user_id, NOT_NULL | PRIMARY_KEY | AUTOINCREMENT, "INTEGER", "", "", "")
-DECLARE_FIELD(TYPE_VARCHAR, user_qq, NOT_NULL, "VARCHAR", "(15)", "", "")
-DECLARE_FIELD(TYPE_VARCHAR, user_phone, NOT_NULL|DEFAULT, "VARCHAR", "(12)", "18888888888", "")
-DECLARE_FIELD(TYPE_TEXT, user_name, 0, "TEXT", "", "", "")
+DECLARE_MYSQL_FIELD(TYPE_INT, user_id, NOT_NULL | PRIMARY_KEY | AUTOINCREMENT, "INTEGER", "", "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, user_qq, NOT_NULL, "VARCHAR", "(15)", "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, user_phone, NOT_NULL|DEFAULT, "VARCHAR", "(12)", "18888888888", "")
+DECLARE_MYSQL_FIELD(TYPE_TEXT, user_name, 0, "TEXT", "", "", "")
 DECLARE_TABLE_CLASS_END()
 
 
@@ -461,9 +461,13 @@ void mysql_test() {
     printf("Drop:%s\n", (char*)test.Drop());
     getchar();
 
-    CDatabaseClient* pClient = new CSqlite3Client();
+    CDatabaseClient* pClient = new CMysqlClient();
     std::map<Buffer, Buffer> args;
-    args["host"] = "test.db";
+    args["host"] = "192.168.6.128";
+    args["user"] = "root";
+    args["password"] = "hu20010618";
+    args["db"] = "HPlayer";
+    args["port"] = "3306";
     int ret = pClient->Connect(args);
     printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
     ret = pClient->Exec(test.TCreate());

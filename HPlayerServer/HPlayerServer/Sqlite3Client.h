@@ -100,3 +100,13 @@ private:
 	int nType;
 };
 
+#define DECLARE_TABLE_CLASS(name, base) class name:public base { \
+public: \
+virtual PTable Copy() const {return std::make_shared<name>(*this);} \
+name():base(){Name=#name;
+
+#define DECLARE_FIELD(ntype,name,attr,type,size,default_,check) \
+{PField pField = std::make_shared<_sqlite3_field_>(ntype, #name, attr, type, size, default_, check);VecField.push_back(pField);MapFields[#name] = pField; }
+
+#define DECLARE_TABLE_CLASS_END() }};
+

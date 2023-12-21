@@ -14,6 +14,10 @@ int CMysqlClient::Connect(const std::map<Buffer, Buffer>& args)
         memset(&m_db, 0, sizeof(m_db));
         return -3;
     }
+    /*if (!args.at("db").empty()) {
+        int ret=Exec("use " + args.at("db") + ";");
+        if (ret != 0)return -4;
+    }*/
     m_bInit = true;
     return 0;
 }
@@ -164,7 +168,7 @@ Buffer _mysql_table_::Insert(const _Table_& values)
             sql += values.VecField[i]->toSqlStr();
         }
     sql += " );";
-    printf("sql = %s", (char*)sql);
+    printf("sql = %s\n", (char*)sql);
     return sql;
 }
 
@@ -183,7 +187,7 @@ Buffer _mysql_table_::Delete(const _Table_& values)
     if (Where.size() > 0) 
         sql += " WHERE " + Where;
     sql += ';';
-    printf("sql = %s", (char*)sql);
+    printf("sql = %s\n", (char*)sql);
     return sql;
 }
 
@@ -209,7 +213,7 @@ Buffer _mysql_table_::Modify(const _Table_& values)
     }
     if (Where.size() > 0)sql += " WHERE " + Where;
     sql += " ;";
-    printf("sql = %s", (char*)sql);
+    printf("sql = %s\n", (char*)sql);
     return sql;
 }
 
@@ -222,7 +226,7 @@ Buffer _mysql_table_::Query()
         sql += '`' + VecField[i]->Name + "`";
     }
     sql += " FROM " + (Buffer)*this + ";";
-    printf("sql = %s", (char*)sql);
+    printf("sql = %s\n", (char*)sql);
     return sql;
 }
 
@@ -251,7 +255,8 @@ _mysql_field_::_mysql_field_():_Field_()
     Value.Double = 0.0;
 }
 
-_mysql_field_::_mysql_field_(int ntype, const Buffer& name, unsigned attr, const Buffer& type, const Buffer& size, const Buffer& default_, const Buffer& check)
+_mysql_field_::_mysql_field_(int ntype, const Buffer& name, unsigned attr, 
+    const Buffer& type, const Buffer& size, const Buffer& default_, const Buffer& check)
 {
     nType = ntype;
     Name = name;
@@ -273,12 +278,12 @@ Buffer _mysql_field_::FCreate()
 {
     //`名称` 类型 属性
     Buffer sql = '`' + Name + "` " + Type + Size + " ";
-    if (Attr & NOT_NULL)sql += " NOT NULL ";
-    else sql += " NULL ";
+    if (Attr & NOT_NULL)sql += "NOT NULL";
+    else sql += "NULL";
     //BLOB TEXT GEOMETRY（坐标） JSON不能有默认值的
     if ((Attr & DEFAULT) && (!Default.empty()) && (Type != "BLOB")
         && (Type != "TEXT") && (Type != "GEOMETRY") && (Type != "JSON"))
-        sql += " DEFAULT " + Default + " ";
+        sql += " DEFAULT \"" + Default + "\" ";
     //UNIQUE PRIMARY_KEY 外面处理
     //CHECK mysql不支持
     if (Attr & AUTOINCREMENT) {
