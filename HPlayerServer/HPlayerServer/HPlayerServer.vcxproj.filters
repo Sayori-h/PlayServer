@@ -57,6 +57,9 @@
     <ClCompile Include="MysqlClient.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="Crypto.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Function.h">
@@ -108,6 +111,9 @@
       <Filter>header</Filter>
     </ClInclude>
     <ClInclude Include="MysqlClient.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>

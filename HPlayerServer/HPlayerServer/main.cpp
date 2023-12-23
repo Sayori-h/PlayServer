@@ -492,9 +492,25 @@ void mysql_test() {
     printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 }
 
+#include "Crypto.h"
+int crypto_test() {
+    Buffer data = "abcdef";
+    data = Crypto::MD5(data);
+    const char* exMD5 = "E80B5017098950FC58AAD83C8C14978E";
+    // 比较字符串是否相同
+    if (strcmp(exMD5, data) == 0) {
+        printf("Strings are identical.\n");
+    }
+    else {
+        printf("Strings are different.\n");
+    }
+    return 0;
+}
+
 int main() {
     //http_test();
     //Sqlite3_test();
-    mysql_test();
+    //mysql_test();
+    crypto_test();
     return 0;
 }

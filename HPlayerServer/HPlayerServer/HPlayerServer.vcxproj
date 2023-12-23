@@ -76,6 +76,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="CEpoll.cpp" />
+    <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="DatabaseHelper.cpp" />
     <ClCompile Include="MysqlClient.cpp" />
     <ClCompile Include="Public.cpp" />
@@ -95,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CEpoll.h" />
+    <ClInclude Include="Crypto.h" />
     <ClInclude Include="DatabaseHelper.h" />
     <ClInclude Include="MysqlClient.h" />
     <ClInclude Include="Public.h" />
@@ -120,7 +122,7 @@
       <AdditionalOptions>-Wno-conversion %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <LibraryDependencies>pthread;m;mysqlclient;</LibraryDependencies>
+      <LibraryDependencies>pthread;m;mysqlclient;crypto;</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

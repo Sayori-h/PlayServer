@@ -22,9 +22,12 @@ public:
 	Buffer(const char* str, size_t length);
 	//不包含end
 	Buffer(const char* begin, const char* end);
+	operator void* () { return (char*)c_str(); }
 	operator char* () { return (char*)c_str(); }
 	operator char* () const { return (char*)c_str(); }
+	operator unsigned char* () const { return (unsigned char*)c_str(); }
 	operator const char* () const { return c_str(); }
+	operator const void* () const { return c_str(); }
 	Buffer& operator=(const char* str);
 };
 
