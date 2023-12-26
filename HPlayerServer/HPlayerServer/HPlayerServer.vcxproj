@@ -78,6 +78,9 @@
     <ClCompile Include="CEpoll.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="DatabaseHelper.cpp" />
+    <ClCompile Include="jsoncpp\json_reader.cpp" />
+    <ClCompile Include="jsoncpp\json_value.cpp" />
+    <ClCompile Include="jsoncpp\json_writer.cpp" />
     <ClCompile Include="MysqlClient.cpp" />
     <ClCompile Include="Public.cpp" />
     <ClCompile Include="HPlayServer.cpp" />
@@ -98,6 +101,17 @@
     <ClInclude Include="CEpoll.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="DatabaseHelper.h" />
+    <ClInclude Include="jsoncpp\allocator.h" />
+    <ClInclude Include="jsoncpp\assertions.h" />
+    <ClInclude Include="jsoncpp\config.h" />
+    <ClInclude Include="jsoncpp\forwards.h" />
+    <ClInclude Include="jsoncpp\json.h" />
+    <ClInclude Include="jsoncpp\json_features.h" />
+    <ClInclude Include="jsoncpp\json_tool.h" />
+    <ClInclude Include="jsoncpp\reader.h" />
+    <ClInclude Include="jsoncpp\value.h" />
+    <ClInclude Include="jsoncpp\version.h" />
+    <ClInclude Include="jsoncpp\writer.h" />
     <ClInclude Include="MysqlClient.h" />
     <ClInclude Include="Public.h" />
     <ClInclude Include="Function.h" />
@@ -113,6 +127,9 @@
     <ClInclude Include="sqlite3\sqlite3ext.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="ThreadPool.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="jsoncpp\json_valueiterator.inl" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

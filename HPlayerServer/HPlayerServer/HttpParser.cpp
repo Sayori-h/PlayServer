@@ -256,6 +256,11 @@ Buffer UrlParser::Host() const
 	return m_host;
 }
 
+const Buffer UrlParser::Uri() const
+{
+	return m_uri;
+}
+
 int UrlParser::Port() const
 {
 	return m_port;

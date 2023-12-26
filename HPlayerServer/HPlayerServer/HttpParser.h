@@ -57,6 +57,7 @@ public:
 	Buffer operator[](const Buffer& name)const;
 	Buffer Protocol()const;
 	Buffer Host()const;
+	const Buffer Uri()const;
 	int Port()const;
 	void SetUrl(const Buffer& url);
 private:

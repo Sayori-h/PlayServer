@@ -63,7 +63,7 @@ public:
 	virtual Buffer Delete(const _Table_& values) override;
 	//TODO:参数进行优化
 	virtual Buffer Modify(const _Table_& values) override;
-	virtual Buffer Query() override;
+	virtual Buffer Query(const Buffer& condition = "") override;
 	//创建一个基于表的对象
 	virtual PTable Copy()const override;
 	virtual void ClearFieldUsed();
@@ -91,13 +91,6 @@ public:
 	virtual operator const Buffer() const override;
 private:
 	Buffer Str2Hex(const Buffer& data)const;
-	struct {
-		bool Bool;
-		int Integer;
-		double Double;
-		Buffer String;
-	}Value;
-	int nType;
 };
 
 #define DECLARE_TABLE_CLASS(name, base) class name:public base { \

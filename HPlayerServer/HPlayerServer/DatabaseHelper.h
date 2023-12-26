@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include "Logger.h"
 
 class _Table_;
 using PTable = std::shared_ptr<_Table_>;
@@ -62,7 +63,7 @@ public:
 	virtual Buffer Delete(const _Table_& values) = 0;
 	//TODO:参数进行优化
 	virtual Buffer Modify(const _Table_& values) = 0;
-	virtual Buffer Query() = 0;
+	virtual Buffer Query(const Buffer&condition="") = 0;
 	//创建一个基于表的对象
 	/*传一个对象进去，根据传的对象创建一个副本，这个东西主要给查询用的，exec中会传一个table进去，
 	这个对应的就是结果集表的数据，Result里面就是一堆表的数据，每一条结果会转成一个table，
@@ -91,6 +92,7 @@ enum {
 };
 
 enum {
+	NONE = 0,
 	NOT_NULL=1,
 	DEFAULT=2,
 	UNIQUE=4,
@@ -140,5 +142,12 @@ public:
 	Buffer Check;
 	//操作条件
 	unsigned Condition;
+	struct {
+		bool Bool;
+		int Integer;
+		double Double;
+		Buffer String;
+	}Value;
+	int nType;
 };
 

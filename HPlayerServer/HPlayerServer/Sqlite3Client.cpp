@@ -233,7 +233,7 @@ Buffer _sqlite3_table_::Modify(const _Table_& values)
     return sql;
 }
 
-Buffer _sqlite3_table_::Query()
+Buffer _sqlite3_table_::Query(const Buffer& condition)
 {
     //SELECT column1, column2, ..., columnN FROM table_name;
     Buffer sql = "SELECT ";
@@ -241,7 +241,10 @@ Buffer _sqlite3_table_::Query()
         if (i > 0)sql += ',';
         sql += '"' + VecField[i]->Name + "\"";
     }
-    sql += " FROM " + (Buffer)*this + ";";
+    sql += " FROM " + (Buffer)*this + " ";
+    if (condition.size() > 0)
+        sql += " WHERE " + condition;
+    sql += ";";
     TRACE_INFO("sql = %s", (char*)sql);
     return sql;
 }
