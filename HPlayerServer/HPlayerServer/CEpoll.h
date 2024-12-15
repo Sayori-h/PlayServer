@@ -7,6 +7,7 @@
 
 #define EVENT_SIZE 256
 
+//Epoll结构体
 class EpollData {
 public:
     EpollData();
